@@ -204,6 +204,7 @@ input[type="range"] { width: min(100%, 180px); }
 .sudoku-layout .nums { order: 4; }
 .sudoku-layout .actions { order: 5; }
 .sudoku-layout .limits { order: 6; }
+.paste-toggle { display: none; }
 .sudoku-key {
   position: absolute;
   width: 1px;
@@ -341,6 +342,22 @@ input[type="range"] { width: min(100%, 180px); }
 @media (max-width: 799px) {
   .tool textarea { min-height: 4.4rem; }
   .where { padding: 8px 10px; }
+}
+@media (max-width: 959px) {
+  .sudoku-layout { gap: 6px; }
+  .sudoku-layout .status { order: 6; }
+  .sudoku-layout .limits { order: 7; }
+  .sudoku-layout .actions { margin-top: 0; }
+  .sudoku-layout .paste-toggle { display: flex; width: 100%; justify-content: center; }
+  .sudoku-layout .paste label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .sudoku-layout .paste:not(.open) textarea,
+  .sudoku-layout .paste:not(.open) .hint { display: none; }
 }
 .maze-canvas, .letter-grid { width: min(100%, 420px); max-width: 100%; height: auto; background: #fff; }
 .letter-grid { display: grid; gap: 1px; }

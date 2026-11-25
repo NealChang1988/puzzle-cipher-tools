@@ -33,6 +33,8 @@ export function mount(doc) {
   const status = doc.getElementById("sudoku-status");
   const grid = doc.getElementById("sudoku-grid");
   const paste = doc.getElementById("paste-input");
+  const pasteWrap = doc.getElementById("sudoku-paste");
+  const pasteBtn = doc.getElementById("btn-paste");
   const values = Array(81).fill(0);
   const fixed = Array(81).fill(false);
   const solved = Array(81).fill(false);
@@ -133,6 +135,11 @@ export function mount(doc) {
   }
   doc.getElementById("btn-erase").addEventListener("click", () => writeDigit(0));
 
+  pasteBtn?.addEventListener("click", () => {
+    const open = pasteWrap.classList.toggle("open");
+    pasteBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) paste.focus();
+  });
   paste.addEventListener("input", () => {
     if (!paste.value.trim()) return;
     const parsed = parseGrid(paste.value);

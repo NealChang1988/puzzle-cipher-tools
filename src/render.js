@@ -374,7 +374,8 @@ function sudokuBody() {
         ${button("btn-download", "Download answer", "download")}
       </div>
       <div class="nums" aria-label="Numbers">${sudokuNumbers()}</div>
-      <div class="paste">
+      <div class="paste" id="sudoku-paste">
+        <button type="button" class="btn paste-toggle" id="btn-paste" aria-expanded="false" aria-controls="paste-input">Paste a puzzle</button>
         <label for="paste-input">Paste a puzzle</label>
         <textarea id="paste-input" rows="3" spellcheck="false" autocomplete="off" placeholder="81 digits. Use 0 or a dot for an empty cell."></textarea>
         <p class="hint">0, a dot, or a blank cell counts as empty. Line breaks, spaces, and | are removed.</p>

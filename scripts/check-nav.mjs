@@ -227,6 +227,24 @@ try {
   lines.push(wordRow);
   console.log(wordRow);
   if (!wordReady || !wordShown || wordA4 !== 2) problems.push({ print: "word-search", wordA4, wordReady, wordShown });
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  await send("Page.navigate", { url: `http://127.0.0.1:${port}/sudoku-solver/` }, sessionId);
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const sudoku = await settle(`(() => {
+    const ids = ["btn-n1", "btn-n2", "btn-n3", "btn-n4", "btn-n5", "btn-n6", "btn-n7", "btn-n8", "btn-n9", "btn-solve"];
+    const bottoms = {};
+    for (const id of ids) {
+      const box = document.getElementById(id).getBoundingClientRect();
+      bottoms[id] = Math.round(box.bottom);
+    }
+    const max = Math.max(...Object.values(bottoms));
+    return { bottoms, max, scroll: window.scrollY };
+  })()`);
+  const sudokuRow = `sudoku 375x812: number keys and Solve bottom ${sudoku.max}`;
+  lines.push(sudokuRow);
+  console.log(sudokuRow);
+  if (!sudoku || sudoku.scroll !== 0 || sudoku.max > 812) problems.push({ sudoku });
 } finally {
   ws.close();
   chrome.kill();
