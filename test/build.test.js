@@ -52,7 +52,11 @@ test("production pages use the spec titles and do not noindex", () => {
   assert.match(html["/credits/"], /Offensive-word filter based on LDNOOBW/);
   assert.match(html["/credits/"], /SIL OPEN FONT LICENSE/);
   assert.match(html["/privacy/"], /not upload/i);
-  assert.equal(sitemapXml(config).includes("/maze-generator/"), false);
+  assert.match(sitemapXml(config), /\/maze-generator\//);
+  assert.match(sitemapXml(config), /\/word-search-generator\//);
+  assert.match(sitemapXml(config), /\/cryptogram-solver\//);
+  assert.match(sitemapXml(config), /\/crossword-solver\//);
+  assert.equal(sitemapXml(config).includes("/word-search-maker/"), false);
   assert.match(sitemapXml(config), /<loc>https:\/\/puzzle-cipher-tools\.example\/anagram-solver\/<\/loc>/);
   assert.match(robotsTxt(config, false), /Allow: \//);
   assert.equal(robotsTxt(config, false).includes("Disallow"), false);

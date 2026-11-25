@@ -13,6 +13,8 @@ const PATHS = {
   bulb: '<path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3 11c.5.6 1 1.4 1 2h4c0-.6.5-1.4 1-2a6 6 0 0 0-3-11z"></path>',
   check: '<path d="M5 12.5l4.2 4.2L19 7.5"></path>',
   image: '<rect x="4" y="5" width="16" height="14" rx="1.5"></rect><path d="M8 14l2.5-2.5L14 15l2-2 2 2"></path>',
+  refresh: '<path d="M20 12a8 8 0 1 1-2.3-5.6"></path><path d="M20 4v5h-5"></path>',
+  print: '<path d="M7 8V4h10v4"></path><path d="M6 17H4V9h16v8h-2"></path><rect x="7" y="13" width="10" height="7" rx="1"></rect>',
 };
 
 export function icon(name) {

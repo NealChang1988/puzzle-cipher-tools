@@ -5,6 +5,7 @@ import { formatGrid } from "./lib/sudoku.js";
 import { encodeLevels, indexFromParts, parseLevelTsv, splitWords } from "./lib/wordlist.js";
 import { chartRows as symbolChart, toSymbols } from "./lib/wingdings.js";
 import { MARK, button, icon } from "./icons.js";
+import { crosswordBody, cryptogramBody, mazeBody, wordSearchBody } from "./batch2-html.js";
 import { TRADEMARK, tools } from "./registry.js";
 
 const SOLUTION =
@@ -508,7 +509,7 @@ function privacyPage(config) {
   <p>There is no account, no sign-in, and no analytics. The site does not set tracking cookies, and it does not ask for your name, school, class, or a child’s answers.</p>
   <p>When you use a tool, the only network requests are for the page itself, and, on the letter tools, for the word-list files. Those files are the same for every visitor. The request does not include the letters or puzzle you typed.</p>
   <p>Share link on the Morse page puts the message after a # in the address. Browsers do not send that part to the server. Copy buttons use the copy feature on your device. Download buttons save a file on your device.</p>
-  <p>The letter tools hide offensive words. That filtering happens in your browser after the word list has loaded.</p>
+  <p>The letter tools, the cryptogram solver, and the crossword helper hide offensive words. That filtering happens in your browser after the word list has loaded. Maze and word-search pages are for making printed sheets. They do not ask for a name, a school, or anyone’s answers.</p>
   <p>Feedback is an email link to <a href="mailto:${esc(config.feedbackEmail)}">${esc(config.feedbackEmail)}</a>. A message you send by email is just an email. There is no form on this site.</p>
 </div>`;
 }
@@ -573,7 +574,11 @@ export function renderSite(config, { noindex = false } = {}) {
     anagram: () => lettersBody("anagram", index),
     unscramble: () => lettersBody("unscramble", index),
     sudoku: () => sudokuBody(),
+    maze: () => mazeBody(),
     wingdings: () => wingdingsBody(),
+    wordsearch: () => wordSearchBody(),
+    cryptogram: () => cryptogramBody(),
+    crossword: () => crosswordBody(),
   };
   for (const tool of tools) {
     pages.push({

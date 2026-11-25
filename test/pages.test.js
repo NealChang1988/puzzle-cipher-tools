@@ -8,6 +8,10 @@ import { mount as mountMorse } from "../src/client/morse-page.js";
 import { mount as mountLetters } from "../src/client/letters-page.js";
 import { mount as mountSudoku } from "../src/client/sudoku-page.js";
 import { mount as mountWingdings } from "../src/client/wingdings-page.js";
+import { mount as mountMaze } from "../src/client/maze-page.js";
+import { mount as mountWordSearch } from "../src/client/wordsearch-page.js";
+import { mount as mountCryptogram } from "../src/client/cryptogram-page.js";
+import { mount as mountCrossword } from "../src/client/crossword-page.js";
 import { installBrowserGlobals, parseDocument } from "./helpers/dom.js";
 
 const config = loadConfig();
@@ -95,4 +99,49 @@ test("each tool page module mounts and its controls run", async () => {
   await symbols.getElementById("btn-png").click();
   await symbols.getElementById("btn-clear").click();
   assert.equal(symbols.getElementById("wd-text").value, "");
+});
+
+test("batch 2 page scripts mount and run", async () => {
+  globalThis.print = () => {};
+  const maze = page("/maze-generator/", "/maze-generator/");
+  mountMaze(maze);
+  assert.ok(maze.getElementById("maze-view").width > 20);
+  await maze.getElementById("btn-new").click();
+  await maze.getElementById("btn-show").click();
+  await maze.getElementById("btn-print").click();
+  await maze.getElementById("btn-png").click();
+  await maze.getElementById("btn-pdf").click();
+  assert.match(maze.getElementById("maze-status").textContent, /Downloaded|seed/);
+
+  const search = page("/word-search-generator/", "/word-search-generator/");
+  mountWordSearch(search);
+  search.getElementById("ws-words").value = "cat, ice cream, T-Rex";
+  search.getElementById("ws-size").value = "12";
+  await search.getElementById("btn-new").click();
+  assert.match(search.getElementById("ws-list").textContent, /ice cream/);
+  assert.match(search.getElementById("ws-puzzle").textContent, /C/);
+  await search.getElementById("btn-show").click();
+  await search.getElementById("btn-png").click();
+  await search.getElementById("btn-pdf").click();
+
+  const crypto = page("/cryptogram-solver/", "/cryptogram-solver/");
+  mountCryptogram(crypto);
+  crypto.getElementById("crypto-text").value = "Q";
+  await crypto.getElementById("btn-solve").click();
+  assert.match(crypto.getElementById("crypto-results").textContent, /A|I/);
+  await crypto.getElementById("btn-letter").click();
+  await crypto.getElementById("btn-word").click();
+  await crypto.getElementById("btn-copy").click();
+  await crypto.getElementById("btn-clear").click();
+
+  const crossword = page("/crossword-solver/", "/crossword-solver/");
+  mountCrossword(crossword);
+  crossword.getElementById("cross-pattern").value = "C?T";
+  await crossword.getElementById("btn-find").click();
+  const found = crossword.getElementById("cross-results").textContent;
+  assert.match(found, /cat/);
+  assert.match(found, /cot/);
+  assert.match(found, /cut/);
+  await crossword.getElementById("btn-copy").click();
+  await crossword.getElementById("btn-clear").click();
 });

@@ -3,13 +3,16 @@
 Free puzzle tools that run entirely in the browser. This repository is batch 1:
 
 - `/` Morse Code Translator
-- `/anagram-solver/`
-- `/unscramble-words/`
+- `/anagram-solver/` and `/unscramble-words/`
 - `/sudoku-solver/`
+- `/maze-generator/`
 - `/wingdings-translator/`
+- `/word-search-generator/`
+- `/cryptogram-solver/`
+- `/crossword-solver/`
 - `/about/`, `/privacy/`, `/credits/`
 
-Maze, word search, cryptogram, and crossword are not linked yet. Add them in `src/registry.js` when their pages exist. Letter tools should keep using `src/lib/wordlist.js` (ENABLE has no `a` or `i`; those two letters are listed there as `EXTRA_SINGLE_LETTERS` for the later crossword and cryptogram tools).
+Letter tools, the cryptogram solver, and the crossword helper share `src/lib/wordlist.js`. ENABLE has no `a` or `i`. The cryptogram solver adds those two single-letter words. The crossword helper does not read clues.
 
 The site name and canonical origin live only in `site.config.json`. The working name is **Puzzle & Cipher Tools**. The origin is a placeholder until a domain is chosen.
 
