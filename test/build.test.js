@@ -11,6 +11,21 @@ import { headersFile, renderSite, robotsTxt, sitemapXml } from "../src/render.js
 
 const config = loadConfig();
 
+function assertActionsWrap(css, label) {
+  const blocks = css.match(/[^{}]*\.actions[^{]*\{[^}]*\}/g) || [];
+  assert.ok(blocks.length > 0, `${label} has no .actions rule`);
+  for (const block of blocks) {
+    assert.equal(/nowrap/.test(block), false, `${label} nowrap: ${block}`);
+    assert.equal(/overflow-x/.test(block), false, `${label} overflow-x: ${block}`);
+    assert.equal(/overflow\s*:\s*auto/.test(block), false, `${label} overflow auto: ${block}`);
+  }
+  assert.match(css, /\.actions\s*\{[^}]*flex-wrap:\s*wrap/);
+}
+
+test("action buttons wrap instead of scrolling sideways", () => {
+  assertActionsWrap(readFileSync(new URL("../src/site.css", import.meta.url), "utf8"), "src");
+});
+
 test("config keeps the site name and canonical origin in one file", () => {
   assert.equal(config.siteName, "Puzzle & Cipher Tools");
   assert.equal(config.canonicalOrigin, "https://puzzle-cipher-tools.example");
@@ -83,6 +98,7 @@ test("preview build writes noindex files and prod build does not", () => {
     }
     assert.equal(name.endsWith(".ttf"), false, name);
   }
+  assertActionsWrap(readFileSync(join(prod, "css", "site.css"), "utf8"), "dist");
   assert.ok(names.some((name) => name.endsWith("puzzle-cipher-symbols.woff2")));
   assert.ok(names.some((name) => name.endsWith("puzzle-cipher-symbols-2.woff2")));
 });

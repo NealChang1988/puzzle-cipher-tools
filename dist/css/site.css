@@ -129,11 +129,17 @@ textarea { min-height: 5.2rem; resize: vertical; }
 .hint, .limits, .fine { color: var(--muted); font-size: 0.92rem; margin: 6px 0 0; }
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
   gap: 8px;
   max-width: 100%;
   margin-top: 10px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+}
+@media (max-width: 799px) {
+  .actions .btn.primary {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
 }
 .btn {
   display: inline-flex;
@@ -273,7 +279,6 @@ input[type="range"] { width: min(100%, 180px); }
 @media (min-width: 800px) {
   .pair { grid-template-columns: 1fr 1fr; }
   .how ol, .cards { grid-template-columns: repeat(3, 1fr); }
-  .actions { flex-wrap: wrap; overflow: visible; }
   textarea { min-height: 8rem; }
 }
 @media (min-width: 960px) {
