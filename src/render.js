@@ -194,9 +194,9 @@ function morseBody(index) {
     </div>
     <p id="morse-unknown" class="note" role="status"></p>
     <div class="modes" role="group" aria-label="Direction">
-      <button type="button" id="mode-auto" aria-pressed="true">Auto</button>
-      <button type="button" id="mode-text" aria-pressed="false">Text to Morse</button>
-      <button type="button" id="mode-morse" aria-pressed="false">Morse to text</button>
+      <button type="button" class="btn" id="mode-auto" aria-pressed="true">Auto</button>
+      <button type="button" class="btn" id="mode-text" aria-pressed="false">Text to Morse</button>
+      <button type="button" class="btn" id="mode-morse" aria-pressed="false">Morse to text</button>
     </div>
     <div class="sliders">
       <label>Speed (WPM) <input id="wpm" type="range" min="5" max="40" value="20"> <span id="wpm-value">20</span></label>
@@ -265,26 +265,40 @@ function lettersBody(kind, index) {
     : "See every word you can spell from your letters, with longer words first.";
   const steps = anagram
     ? [
-        'Type or paste letters into "Your letters". Spaces and commas are removed for you.',
-        'Leave "Use all letters" selected, or choose "Any length", and set "Shortest word".',
-        'Press "Find words", then press "Copy all" or click a word to copy it.',
+        'Type the word you want to rearrange into "Your letters".',
+        'Leave "Use all letters" selected so every letter has to be used.',
+        'Press "Find words". Copy a full rearrangement to solve or make a puzzle.',
       ]
     : [
-        'Type or paste letters into "Your letters". Spaces and commas are removed for you.',
-        'Leave "Any length" selected, or choose "Use all letters", and set "Shortest word".',
-        'Press "Find words", then press "Copy all" or click a word to copy it.',
+        'Type the letters from your rack into "Your letters".',
+        'Leave "Any length" selected to see longer words and shorter words.',
+        'Press "Find words", then click a word to copy it.',
       ];
   const intro = anagram
     ? "Jordan is writing a puzzle and checks every rearrangement of LISTEN."
     : "Alex is stuck on a paper puzzle. The letters on the card are written P, L, O, E.";
   const before = anagram ? "LISTEN" : "P, L, O, E";
   const after = anagram ? listen.words.map((item) => item.word).join(", ") : groupLines(ploe.words);
-  const other = anagram
-    ? '<a href="/unscramble-words/">Unscramble Words</a>'
-    : '<a href="/anagram-solver/">Anagram Solver</a>';
-  const otherSentence = anagram
-    ? `This page starts on Use all letters, so every letter has to be used. ${other} starts on Any length and also lists shorter words.`
-    : `This page starts on Any length, so shorter words are listed too. ${other} starts on Use all letters.`;
+  const cross = anagram
+    ? 'Need shorter words too? Try <a href="/unscramble-words/">Unscramble Words</a>.'
+    : 'Need every letter used? Try <a href="/anagram-solver/">Anagram Solver</a>.';
+  const own = anagram
+    ? `<section class="about-tool"><h2>Rearrange every letter</h2><p>An anagram uses ALL of the letters, in a new order. Use this page to solve a word puzzle or to make a puzzle from a word you chose.</p></section>`
+    : `<section class="about-tool"><h2>Letter racks</h2><p>A word-game rack does not have to use every letter. This page lists every longer word and every shorter word you can spell.</p></section>`;
+  const limits = anagram
+    ? "Use all letters is selected at the start. Up to 15 letters, plus at most 2 wildcards (? or *). The list shows 500 words at a time."
+    : "Any length is selected at the start, so leftover letters are allowed. Up to 15 letters, plus at most 2 wildcards (? or *). The list shows 500 words at a time.";
+  const faqs = anagram
+    ? [
+        ["How do I solve a word puzzle?", "Type the letters, leave Use all letters selected, and press Find words. The first words use every letter."],
+        ["How do I make a puzzle?", "Type a word, press Find words, and pick another word that uses the same letters. That pair is the puzzle."],
+        ["Why do listen and silent come first?", "Those two use every letter of LISTEN, and common words come first inside that length."],
+      ]
+    : [
+        ["What is a letter rack?", "It is the set of letters you have in a word game. Any length lists every word those letters can spell."],
+        ["Why are longer words listed first?", "Longer words are grouped above shorter ones. Inside one length, common words come first."],
+        ["Can a word leave some letters unused?", "Yes. Any length is the start here, so a shorter word is listed even when letters are left over."],
+      ];
   return `<p class="lede">${esc(lede)}</p>
 <div class="tool-wrap" id="tool" data-default-mode="${anagram ? "all" : "any"}">
   <p class="where">Everything runs in your browser; nothing you type is uploaded.</p>
@@ -308,30 +322,14 @@ function lettersBody(kind, index) {
     <p id="letters-status" class="status" role="status"></p>
     <p class="fine">Words from the ENABLE word list. Not an official tournament word list.</p>
     <p class="fine">Offensive words are hidden. Letters filled by a ? or * wildcard are underlined.</p>
-    <p class="limits">Up to 15 letters, plus at most 2 wildcards (? or *). The list shows 500 words at a time.</p>
+    <p class="limits">${esc(limits)}</p>
   </section>
 </div>
+<p class="cross">${cross}</p>
+${own}
 ${howTo(steps)}
 ${example(intro, before, after)}
-${faq([
-  [
-    anagram ? "Why do listen and silent come first?" : "Why are some 4-letter words listed before 3-letter words?",
-    "Common words come first inside each length. A lower everyday-use score means a more common word. Longer lengths are listed before shorter ones.",
-  ],
-  [
-    "What does the underline on a letter mean?",
-    "A ? or * can stand for any letter, up to two of them. The underlined letter is the one the wildcard filled in.",
-  ],
-  [
-    "Why is a word I know missing?",
-    "The list is ENABLE, a public-domain word list. It is not a tournament list, and it has no names. Offensive words are hidden, and the result says how many were hidden.",
-  ],
-  ["How is this different from the other letter page?", otherSentence],
-  [
-    "What if it says no words were found?",
-    "Take out a letter, lower Shortest word, or add a ? wildcard, then press Find words again.",
-  ],
-])}
+${faq(faqs)}
 ${more(anagram ? "/anagram-solver/" : "/unscramble-words/")}`;
 }
 
@@ -365,6 +363,7 @@ function sudokuBody() {
   <section class="tool" aria-label="Sudoku Solver">
     <div class="sudoku-layout">
       <div id="sudoku-grid" class="grid" role="grid" aria-label="Sudoku grid">${sudokuCells()}</div>
+      <input id="sudoku-key" class="sudoku-key" inputmode="numeric" autocomplete="off" aria-label="Number for the selected cell">
       <p id="sudoku-status" class="status" role="status">The answer will show up here and in the grid.</p>
       <div class="actions">
         ${button("btn-solve", "Solve", "check", "primary")}
@@ -409,7 +408,7 @@ ${faq([
   ],
   [
     "Why the note about 17 numbers?",
-    "A finished sudoku needs 17 filled cells before it can have just one answer. Fewer than that, and the answer is likely not unique.",
+    "A sudoku puzzle needs at least 17 given numbers to have only one solution.",
   ],
   [
     "Can I print the grid?",

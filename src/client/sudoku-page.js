@@ -74,7 +74,15 @@ export function mount(doc) {
   function select(index) {
     selected = (index + 81) % 81;
     paint();
-    doc.getElementById("cell-" + selected).focus();
+    const cell = doc.getElementById("cell-" + selected);
+    const keyIn = doc.getElementById("sudoku-key");
+    const narrow = typeof matchMedia === "function" && matchMedia("(max-width: 799px)").matches;
+    if (narrow && keyIn) {
+      keyIn.value = "";
+      keyIn.focus();
+    } else {
+      cell.focus();
+    }
   }
   function writeDigit(digit) {
     clearMarks();
@@ -90,7 +98,13 @@ export function mount(doc) {
   for (let i = 0; i < 81; i++) {
     doc.getElementById("cell-" + i).addEventListener("click", () => select(i));
   }
-  grid.addEventListener("keydown", (event) => {
+  const keyIn = doc.getElementById("sudoku-key");
+  keyIn?.addEventListener("input", () => {
+    const digit = (keyIn.value.match(/[1-9]/g) || []).pop();
+    keyIn.value = "";
+    if (digit) writeDigit(Number(digit));
+  });
+  function onGridKey(event) {
     const key = event.key;
     if (key >= "1" && key <= "9") {
       writeDigit(Number(key));
@@ -111,7 +125,9 @@ export function mount(doc) {
       select(selected - 9);
       event.preventDefault?.();
     }
-  });
+  }
+  grid.addEventListener("keydown", onGridKey);
+  keyIn?.addEventListener("keydown", onGridKey);
   for (let digit = 1; digit <= 9; digit++) {
     doc.getElementById("btn-n" + digit).addEventListener("click", () => writeDigit(digit));
   }

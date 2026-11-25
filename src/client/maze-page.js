@@ -109,7 +109,7 @@ export function paint(canvas, maze, showSolution, lineWidth) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const cell = 18;
-  const pad = Math.max(4, lineWidth);
+  const pad = Math.max(10, lineWidth + 8);
   canvas.width = maze.width * cell + pad * 2;
   canvas.height = maze.height * cell + pad * 2;
   ctx.fillStyle = "#ffffff";
@@ -146,12 +146,11 @@ export function paint(canvas, maze, showSolution, lineWidth) {
     ctx.strokeStyle = "#9a3412";
     ctx.lineWidth = Math.max(2, lineWidth);
     ctx.beginPath();
-    maze.solution.forEach(([x, y], index) => {
-      const px = pad + (x + 0.5) * cell;
-      const py = pad + (y + 0.5) * cell;
-      if (index === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+    ctx.moveTo(pad + 0.5 * cell, pad - 0.45 * cell);
+    maze.solution.forEach(([x, y]) => {
+      ctx.lineTo(pad + (x + 0.5) * cell, pad + (y + 0.5) * cell);
     });
+    ctx.lineTo(pad + (maze.width - 0.5) * cell, pad + (maze.height + 0.45) * cell);
     ctx.stroke();
   }
 }
