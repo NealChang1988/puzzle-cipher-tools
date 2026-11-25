@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node scripts/build.js",
     "build:preview": "NOINDEX=1 node scripts/build.js",
-    "test": "node --test"
+    "test": "node --test && node scripts/check-nav.mjs",
+    "test:nav": "node scripts/check-nav.mjs"
   },
   "engines": {
     "node": ">=20"

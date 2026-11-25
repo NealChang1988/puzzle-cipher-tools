@@ -64,6 +64,7 @@ a:hover { text-decoration-thickness: 2px; }
   list-style: none;
 }
 .tool-menu summary::-webkit-details-marker { display: none; }
+.desktop-nav { display: none; }
 .tools {
   flex-wrap: wrap;
   gap: 6px;
@@ -71,7 +72,7 @@ a:hover { text-decoration-thickness: 2px; }
   margin: 8px 0 0;
   overflow: visible;
 }
-details[open] > .tools {
+details[open] > .mobile-nav {
   display: flex;
   flex-wrap: wrap;
   overflow: visible;
@@ -295,14 +296,15 @@ input[type="range"] { width: min(100%, 180px); }
 }
 @media (min-width: 960px) {
   .top { display: flex; align-items: flex-start; gap: 18px; padding: 10px 20px; }
-  .tool-menu { margin: 0; flex: 1; min-width: 0; }
-  .tool-menu summary { display: none; }
-  .tool-menu .tools {
+  .desktop-nav {
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
-    overflow: visible;
+    min-width: 0;
     margin: 0;
+    overflow: visible;
   }
+  .tool-menu { display: none; }
   .tool-wrap { grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
   .sudoku-layout {
     grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);

@@ -48,6 +48,8 @@ Change `canonicalOrigin` in `site.config.json`, then rebuild, when the domain is
 npm test
 ```
 
+`npm test` runs the unit tests, then `node scripts/check-nav.mjs`. That script opens headless Chrome against the built site and checks that all nine tool names have a real box on screen at 1024, 1280, and 1440, and that the Tools menu at 375px opens to the same nine names. Chrome must be on `PATH` (`google-chrome`). Set `CHROME_PATH` if it lives somewhere else.
+
 Rebuilding the symbol-font subsets needs Python `fonttools` and `brotli` (`pip install fonttools brotli`). The coverage test reads the committed `.woff2` files with fontTools.
 
 ## Data and fonts

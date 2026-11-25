@@ -86,9 +86,10 @@ function header(config, current) {
   return `<a class="skip" href="#main">Skip to content</a>
 <header class="top">
   <a class="brand" href="/">${MARK}<span>${esc(config.siteName)}</span></a>
+  <nav class="tools desktop-nav" aria-label="Tools">${links}</nav>
   <details class="tool-menu">
     <summary>Tools</summary>
-    <nav class="tools" aria-label="Tools">${links}</nav>
+    <nav class="tools mobile-nav" aria-label="Tools">${links}</nav>
   </details>
 </header>`;
 }

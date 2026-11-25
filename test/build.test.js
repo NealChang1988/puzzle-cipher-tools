@@ -26,14 +26,19 @@ test("action buttons wrap instead of scrolling sideways", () => {
   assertActionsWrap(readFileSync(new URL("../src/site.css", import.meta.url), "utf8"), "src");
 });
 
-test("desktop nav does not hide tools in a sideways scroll strip", () => {
+test("desktop nav is a plain list, not a closed details menu", () => {
   const css = readFileSync(new URL("../src/site.css", import.meta.url), "utf8");
   const blocks = css.match(/[^{}]*\.tools[^{]*\{[^}]*\}/g) || [];
-  assert.ok(blocks.length > 0);
   for (const block of blocks) {
     assert.equal(/overflow-x\s*:\s*(auto|scroll)/.test(block), false, block);
   }
-  assert.match(css, /\.tools\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(css, /@media \(min-width: 960px\) \{[\s\S]*\.desktop-nav \{[^}]*display:\s*flex/);
+  assert.match(css, /@media \(min-width: 960px\) \{[\s\S]*\.tool-menu \{\s*display:\s*none/);
+  const home = renderSite(config, { noindex: false }).find((page) => page.path === "/").html;
+  assert.match(home, /<nav class="tools desktop-nav"/);
+  assert.equal(home.includes("<details"), true);
+  const details = home.slice(home.indexOf("<details"), home.indexOf("</details>"));
+  assert.equal(details.includes("desktop-nav"), false);
 });
 
 test("config keeps the site name and canonical origin in one file", () => {

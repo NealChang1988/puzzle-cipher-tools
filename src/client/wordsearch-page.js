@@ -145,10 +145,21 @@ export function mount(doc) {
   answerBox.classList.add("answer-only");
 }
 
-function drawGrid(canvas, puzzle, marks) {
+export function placedCells(puzzle) {
+  const cells = new Set();
+  for (const item of puzzle.placed || []) {
+    for (let i = 0; i < item.letters.length; i++) {
+      cells.add(`${item.x + item.dx * i},${item.y + item.dy * i}`);
+    }
+  }
+  return cells;
+}
+
+export function drawGrid(canvas, puzzle, marks) {
   const ctx = canvas.getContext("2d");
   const side = puzzle.grid.length;
   const cell = 28;
+  const marked = marks ? placedCells(puzzle) : new Set();
   canvas.width = side * cell + 24;
   canvas.height = side * cell + 24;
   ctx.fillStyle = "#ffffff";
@@ -157,16 +168,19 @@ function drawGrid(canvas, puzzle, marks) {
   ctx.font = "16px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  let boxed = 0;
   puzzle.grid.forEach((row, y) => {
     row.forEach((letter, x) => {
       ctx.fillText(letter, 12 + (x + 0.5) * cell, 12 + (y + 0.5) * cell);
-      if (marks) {
+      if (marked.has(`${x},${y}`)) {
         ctx.strokeStyle = "#111111";
         ctx.lineWidth = 2;
         ctx.strokeRect(12 + x * cell + 2, 12 + y * cell + 2, cell - 4, cell - 4);
+        boxed += 1;
       }
     });
   });
+  return boxed;
 }
 
 if (typeof document !== "undefined" && document.getElementById?.("ws-words")) mount(document);
