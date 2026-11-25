@@ -1,7 +1,5 @@
 /**
- * Live tools only. Batch 2 (maze, word search, cryptogram, crossword)
- * should be added here when those pages exist. Do not link a tool
- * until its page is real.
+ * Live tools. Keep this list in the same order as the nav and the sitemap.
  */
 export const TRADEMARK =
   "Wingdings is a trademark of Microsoft Corporation. This site is not affiliated with or endorsed by Microsoft. No Microsoft font files are used.";
@@ -60,6 +58,18 @@ export const tools = [
     og: "/og/sudoku.png",
   },
   {
+    id: "maze",
+    name: "Maze Generator",
+    path: "/maze-generator/",
+    title: "Maze Generator \u2013 Free Printable Mazes With Answers",
+    h1: "Maze Generator",
+    description: "Make a printable maze with one path and a separate answer page. It is drawn in your browser.",
+    lede: "Make a printable maze with one path from the top-left opening to the bottom-right opening.",
+    blurb: "Print a maze and its answer.",
+    script: "/js/maze-page.js",
+    og: "/og/maze.png",
+  },
+  {
     id: "wingdings",
     name: "Wingdings Translator",
     path: "/wingdings-translator/",
@@ -72,6 +82,42 @@ export const tools = [
     script: "/js/wingdings-page.js",
     og: "/og/wingdings.png",
     symbols: true,
+  },
+  {
+    id: "wordsearch",
+    name: "Word Search Generator",
+    path: "/word-search-generator/",
+    title: "Word Search Generator \u2013 Free Printable Word Search Maker",
+    h1: "Word Search Generator",
+    description: "Free word search maker. Build a printable puzzle from your own words. It is made in your browser.",
+    lede: "Turn your word list into a printable word search, with a separate answer page.",
+    blurb: "Make a printable word search.",
+    script: "/js/wordsearch-page.js",
+    og: "/og/word-search.png",
+  },
+  {
+    id: "cryptogram",
+    name: "Cryptogram Solver",
+    path: "/cryptogram-solver/",
+    title: "Cryptogram Solver \u2013 Crack Letter-Substitution Puzzles",
+    h1: "Cryptogram Solver",
+    description: "Solve a letter-substitution puzzle from ordinary English words. The coded text stays in your browser.",
+    lede: "Find the most likely reading of a letter-substitution puzzle, using ordinary English words.",
+    blurb: "Solve a letter-substitution puzzle.",
+    script: "/js/cryptogram-page.js",
+    og: "/og/cryptogram.png",
+  },
+  {
+    id: "crossword",
+    name: "Crossword Solver",
+    path: "/crossword-solver/",
+    title: "Crossword Solver \u2013 Find Words by Known Letters",
+    h1: "Crossword Solver",
+    description: "Find words that fit the letters you know. This tool does not read clues. The search runs in your browser.",
+    lede: "This tool finds words that fit the letters you know. It does not read clues.",
+    blurb: "Find words that fit the letters you know.",
+    script: "/js/crossword-page.js",
+    og: "/og/crossword.png",
   },
 ];
 

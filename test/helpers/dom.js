@@ -126,12 +126,21 @@ export function createElement(tag) {
     const ctx = {
       font: "",
       fillStyle: "",
+      strokeStyle: "",
       textBaseline: "",
+      textAlign: "",
+      lineWidth: 1,
+      lineCap: "butt",
       measureText(text) {
         return { width: [...String(text)].length * 24 };
       },
       fillRect() {},
       fillText() {},
+      beginPath() {},
+      moveTo() {},
+      lineTo() {},
+      stroke() {},
+      strokeRect() {},
       canvas: el,
     };
     el.getContext = () => ctx;

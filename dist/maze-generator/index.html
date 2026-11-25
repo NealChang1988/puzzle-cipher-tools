@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maze Generator – Free Printable Mazes With Answers</title>
+<meta name="description" content="Make a printable maze with one path and a separate answer page. It is drawn in your browser.">
+<link rel="canonical" href="https://puzzle-cipher-tools.example/maze-generator/">
+
+<meta property="og:title" content="Maze Generator – Free Printable Mazes With Answers">
+<meta property="og:description" content="Make a printable maze with one path and a separate answer page. It is drawn in your browser.">
+<meta property="og:url" content="https://puzzle-cipher-tools.example/maze-generator/">
+<meta property="og:image" content="https://puzzle-cipher-tools.example/og/maze.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1c1915">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+  <rect width="32" height="32" rx="8" fill="#efe6d6"></rect>
+  <circle cx="8" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="14" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="20" cy="16" r="2.1" fill="#1c1915"></circle>
+  <rect x="24" y="14.4" width="5.5" height="3.2" rx="1.2" fill="#9a3412"></rect>
+</svg><span>Puzzle &amp; Cipher Tools</span></a>
+  <nav class="tools desktop-nav" aria-label="Tools"><a href="/">Morse Code Translator</a><a href="/anagram-solver/">Anagram Solver</a><a href="/unscramble-words/">Unscramble Words</a><a href="/sudoku-solver/">Sudoku Solver</a><a href="/maze-generator/" aria-current="page">Maze Generator</a><a href="/wingdings-translator/">Wingdings Translator</a><a href="/word-search-generator/">Word Search Generator</a><a href="/cryptogram-solver/">Cryptogram Solver</a><a href="/crossword-solver/">Crossword Solver</a></nav>
+  <details class="tool-menu">
+    <summary>Tools</summary>
+    <nav class="tools mobile-nav" aria-label="Tools"><a href="/">Morse Code Translator</a><a href="/anagram-solver/">Anagram Solver</a><a href="/unscramble-words/">Unscramble Words</a><a href="/sudoku-solver/">Sudoku Solver</a><a href="/maze-generator/" aria-current="page">Maze Generator</a><a href="/wingdings-translator/">Wingdings Translator</a><a href="/word-search-generator/">Word Search Generator</a><a href="/cryptogram-solver/">Cryptogram Solver</a><a href="/crossword-solver/">Crossword Solver</a></nav>
+  </details>
+</header>
+<main class="wrap" id="main">
+<h1>Maze Generator</h1>
+<p class="lede">Make a printable maze with one path from the top-left opening to the bottom-right opening.</p>
+<div class="tool-wrap" id="tool">
+  <p class="where">Everything runs in your browser; nothing you type is uploaded.</p>
+  <section class="tool" aria-label="Maze Generator">
+    <div class="controls">
+      <div class="actions">
+        <button type="button" class="btn" id="preset-easy"><span class="btn-label">Easy</span></button>
+        <button type="button" class="btn" id="preset-medium"><span class="btn-label">Medium</span></button>
+        <button type="button" class="btn" id="preset-hard"><span class="btn-label">Hard</span></button>
+      </div>
+      <div class="choices">
+        <label>Width <input id="maze-width" type="number" min="5" max="100" value="10"></label>
+        <label>Height <input id="maze-height" type="number" min="5" max="100" value="10"></label>
+        <label>Seed <input id="maze-seed" type="number" value="12345"></label>
+        <label>Line thickness <input id="maze-thickness" type="number" min="1" max="8" value="2"></label>
+      </div>
+    </div>
+    <p id="maze-status" class="status" role="status">The maze will show up here.</p>
+    <canvas id="maze-view" class="maze-canvas" width="320" height="180" aria-label="Maze"></canvas>
+    <canvas id="maze-answer" class="maze-canvas answer-only" width="320" height="180" aria-label="Maze answer"></canvas>
+    <div class="actions">
+      <button type="button" class="btn primary" id="btn-new"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"></path><path d="M20 4v5h-5"></path></svg><span class="btn-label">New maze</span></button>
+      <button type="button" class="btn" id="btn-show"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3 11c.5.6 1 1.4 1 2h4c0-.6.5-1.4 1-2a6 6 0 0 0-3-11z"></path></svg><span class="btn-label">Show solution</span></button>
+      <button type="button" class="btn" id="btn-print"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V4h10v4"></path><path d="M6 17H4V9h16v8h-2"></path><rect x="7" y="13" width="10" height="7" rx="1"></rect></svg><span class="btn-label">Print</span></button>
+      <button type="button" class="btn" id="btn-png"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"></rect><path d="M8 14l2.5-2.5L14 15l2-2 2 2"></path></svg><span class="btn-label">Download PNG</span></button>
+      <button type="button" class="btn" id="btn-pdf"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"></path><path d="M8 10l4 4 4-4"></path><path d="M5 19h14"></path></svg><span class="btn-label">Download PDF</span></button>
+    </div>
+    <p class="limits">Width and height are 5 to 100 cells. The same seed always makes the same maze. 100 by 100 is the largest.</p>
+  </section>
+</div>
+<section class="how"><h2>How to use</h2><ol><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.2-.8L19 8.4 15.6 5 5 15.6 4 20z"></path><path d="M13.5 7.1l3.4 3.4"></path></svg></span><p>Set Width, Height, and Seed, or press &quot;Easy&quot;, &quot;Medium&quot;, or &quot;Hard&quot;.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3 11c.5.6 1 1.4 1 2h4c0-.6.5-1.4 1-2a6 6 0 0 0-3-11z"></path></svg></span><p>Press &quot;New maze&quot; for a different maze. Press &quot;Show solution&quot; to see the path.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg></span><p>Press &quot;Print&quot; for the maze and the answer, or &quot;Download PNG&quot; or &quot;Download PDF&quot; to save a file.</p></li></ol></section>
+<section class="example"><h2>Example</h2><p>A teacher, Riley, needs a 10 by 10 maze for class and writes down seed 12345 so the same sheet can be printed again.</p>
+<table><thead><tr><th>Before</th><th>After</th></tr></thead>
+<tbody><tr><td><pre>10 by 10, seed 12345</pre></td><td><pre>One path from the top-left opening to the bottom-right opening.</pre></td></tr></tbody></table></section>
+<section class="faq"><h2>FAQ</h2><details><summary>Why does the same seed look the same later?</summary><p>The maze is built from that seed, not from a fresh random draw. Type the same width, height, and seed to get the same maze.</p></details><details><summary>Where do I start?</summary><p>Enter at the opening in the top-left cell. Leave through the opening in the bottom-right cell. There is only one path.</p></details><details><summary>Can I print the answer too?</summary><p>Yes. Press Print. The maze is on the first page and the answer path is on the next page, without the site header.</p></details><details><summary>What if I type a size that is too big?</summary><p>Use a width and height from 5 to 100. Press Easy, Medium, or Hard to fill in a size that works.</p></details></section>
+<section class="more"><h2>More puzzle tools</h2><ul class="cards"><li class="card"><a href="/">Morse Code Translator</a><p>Turn dots and dashes into words, or words into sound.</p></li><li class="card"><a href="/anagram-solver/">Anagram Solver</a><p>Use every letter to find real words.</p></li><li class="card"><a href="/unscramble-words/">Unscramble Words</a><p>Find every word those letters can spell.</p></li><li class="card"><a href="/sudoku-solver/">Sudoku Solver</a><p>Fill a 9 by 9 sudoku or ask for one hint.</p></li><li class="card"><a href="/wingdings-translator/">Wingdings Translator</a><p>Turn text into symbols and symbols back into text.</p></li><li class="card"><a href="/word-search-generator/">Word Search Generator</a><p>Make a printable word search.</p></li><li class="card"><a href="/cryptogram-solver/">Cryptogram Solver</a><p>Solve a letter-substitution puzzle.</p></li><li class="card"><a href="/crossword-solver/">Crossword Solver</a><p>Find words that fit the letters you know.</p></li></ul></section>
+</main>
+<footer class="foot">
+  <div class="inner">
+    <nav aria-label="About this site">
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/credits/">Credits</a>
+      <a href="mailto:alan.chang198807@gmail.com">Feedback</a>
+    </nav>
+    <p class="trade">Wingdings is a trademark of Microsoft Corporation. This site is not affiliated with or endorsed by Microsoft. No Microsoft font files are used.</p>
+  </div>
+</footer>
+<script type="module" src="/js/maze-page.js"></script>
+</body>
+</html>

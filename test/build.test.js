@@ -26,6 +26,21 @@ test("action buttons wrap instead of scrolling sideways", () => {
   assertActionsWrap(readFileSync(new URL("../src/site.css", import.meta.url), "utf8"), "src");
 });
 
+test("desktop nav is a plain list, not a closed details menu", () => {
+  const css = readFileSync(new URL("../src/site.css", import.meta.url), "utf8");
+  const blocks = css.match(/[^{}]*\.tools[^{]*\{[^}]*\}/g) || [];
+  for (const block of blocks) {
+    assert.equal(/overflow-x\s*:\s*(auto|scroll)/.test(block), false, block);
+  }
+  assert.match(css, /@media \(min-width: 960px\) \{[\s\S]*\.desktop-nav \{[^}]*display:\s*flex/);
+  assert.match(css, /@media \(min-width: 960px\) \{[\s\S]*\.tool-menu \{\s*display:\s*none/);
+  const home = renderSite(config, { noindex: false }).find((page) => page.path === "/").html;
+  assert.match(home, /<nav class="tools desktop-nav"/);
+  assert.equal(home.includes("<details"), true);
+  const details = home.slice(home.indexOf("<details"), home.indexOf("</details>"));
+  assert.equal(details.includes("desktop-nav"), false);
+});
+
 test("config keeps the site name and canonical origin in one file", () => {
   assert.equal(config.siteName, "Puzzle & Cipher Tools");
   assert.equal(config.canonicalOrigin, "https://puzzle-cipher-tools.example");
@@ -52,7 +67,11 @@ test("production pages use the spec titles and do not noindex", () => {
   assert.match(html["/credits/"], /Offensive-word filter based on LDNOOBW/);
   assert.match(html["/credits/"], /SIL OPEN FONT LICENSE/);
   assert.match(html["/privacy/"], /not upload/i);
-  assert.equal(sitemapXml(config).includes("/maze-generator/"), false);
+  assert.match(sitemapXml(config), /\/maze-generator\//);
+  assert.match(sitemapXml(config), /\/word-search-generator\//);
+  assert.match(sitemapXml(config), /\/cryptogram-solver\//);
+  assert.match(sitemapXml(config), /\/crossword-solver\//);
+  assert.equal(sitemapXml(config).includes("/word-search-maker/"), false);
   assert.match(sitemapXml(config), /<loc>https:\/\/puzzle-cipher-tools\.example\/anagram-solver\/<\/loc>/);
   assert.match(robotsTxt(config, false), /Allow: \//);
   assert.equal(robotsTxt(config, false).includes("Disallow"), false);
