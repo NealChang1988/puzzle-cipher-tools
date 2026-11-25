@@ -100,21 +100,48 @@ export function mazeDocument(maze) {
 export function wordSearchPdf(puzzle, { title = "Word search", answer = false } = {}) {
   const width = 612;
   const height = 792;
-  const commands = ["BT", "/F1 16 Tf", `48 ${height - 40} Td`, `(${escapePdf(answer ? `${title} answer` : title || "Word search")}) Tj`, "ET"];
   const side = puzzle.grid.length;
-  const cell = Math.min(18, (width - 96) / side);
+  const cell = Math.min(22, (width - 96) / side);
   const ox = 48;
-  const top = height - 70;
-  commands.push("BT", `/F1 ${Math.max(8, cell - 4)} Tf`);
+  const gridTop = height - 72;
+  const fontSize = Math.max(8, Math.round(cell - 8));
+  const commands = [
+    "0 0 0 RG",
+    "0 0 0 rg",
+    "BT",
+    "/F1 16 Tf",
+    `48 ${height - 40} Td`,
+    `(${escapePdf(answer ? `${title} answer` : title || "Word search")}) Tj`,
+    "ET",
+  ];
   for (let y = 0; y < side; y++) {
-    const row = puzzle.grid[y].join(cell > 14 ? " " : "");
-    commands.push(`1 0 0 1 ${ox} ${top - y * cell} Tm`, `(${escapePdf(row)}) Tj`);
+    for (let x = 0; x < side; x++) {
+      const x0 = ox + x * cell;
+      const y0 = gridTop - (y + 1) * cell;
+      commands.push(
+        "BT",
+        `/F1 ${fontSize} Tf`,
+        `${(x0 + cell * 0.28).toFixed(2)} ${(y0 + cell * 0.3).toFixed(2)} Td`,
+        `(${escapePdf(puzzle.grid[y][x])}) Tj`,
+        "ET",
+      );
+    }
   }
-  commands.push("ET");
-  let y = top - side * cell - 20;
-  commands.push("BT", "/F1 11 Tf");
-  const labels = puzzle.placed.map((item) => item.original || item.letters);
-  commands.push(`1 0 0 1 48 ${y} Tm`, `(${escapePdf(labels.join("  "))}) Tj`, "ET");
+  if (answer) {
+    commands.push("1.4 w");
+    for (const item of puzzle.placed || []) {
+      for (let i = 0; i < item.letters.length; i++) {
+        const x = item.x + item.dx * i;
+        const y = item.y + item.dy * i;
+        const x0 = ox + x * cell + 1.2;
+        const y0 = gridTop - (y + 1) * cell + 1.2;
+        commands.push(`${x0.toFixed(2)} ${y0.toFixed(2)} ${(cell - 2.4).toFixed(2)} ${(cell - 2.4).toFixed(2)} re S`);
+      }
+    }
+  }
+  const labels = (puzzle.placed || []).map((item) => item.original || item.letters);
+  const listY = gridTop - side * cell - 22;
+  commands.push("BT", "/F1 11 Tf", `48 ${listY} Td`, `(${escapePdf(labels.join("  "))}) Tj`, "ET");
   return { width, height, stream: commands.join("\n") };
 }
 

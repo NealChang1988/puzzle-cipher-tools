@@ -56,13 +56,25 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .brand span { font-size: 0.98rem; }
 .mark { width: 28px; height: 28px; flex: 0 0 auto; }
+.tool-menu { margin-top: 8px; }
+.tool-menu summary {
+  color: var(--paper);
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+.tool-menu summary::-webkit-details-marker { display: none; }
 .tools {
-  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   max-width: 100%;
   margin: 8px 0 0;
-  padding: 0 0 2px;
-  overflow-x: auto;
+  overflow: visible;
+}
+details[open] > .tools {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: visible;
 }
 .tools a {
   color: var(--paper);
@@ -262,7 +274,7 @@ input[type="range"] { width: min(100%, 180px); }
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px;
-  overflow-x: auto;
+  overflow: visible;
   max-width: 100%;
 }
 .foot {
@@ -282,8 +294,15 @@ input[type="range"] { width: min(100%, 180px); }
   textarea { min-height: 8rem; }
 }
 @media (min-width: 960px) {
-  .top { display: flex; align-items: center; gap: 18px; padding: 10px 20px; }
-  .tools { margin: 0; flex: 1; }
+  .top { display: flex; align-items: flex-start; gap: 18px; padding: 10px 20px; }
+  .tool-menu { margin: 0; flex: 1; min-width: 0; }
+  .tool-menu summary { display: none; }
+  .tool-menu .tools {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: visible;
+    margin: 0;
+  }
   .tool-wrap { grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
   .sudoku-layout {
     grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);

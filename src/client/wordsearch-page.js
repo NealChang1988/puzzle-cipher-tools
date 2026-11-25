@@ -119,7 +119,7 @@ export function mount(doc) {
       if (!puzzle) make();
       if (!puzzle?.ok) return;
       const canvas = doc.createElement("canvas");
-      drawGrid(canvas, puzzle, false);
+      drawGrid(canvas, puzzle, show);
       const blob = await new Promise((resolve) => canvas.toBlob((value) => resolve(value), "image/png"));
       if (!blob) {
         say("The picture could not be created. Press Download PDF instead.");
@@ -160,9 +160,13 @@ function drawGrid(canvas, puzzle, marks) {
   puzzle.grid.forEach((row, y) => {
     row.forEach((letter, x) => {
       ctx.fillText(letter, 12 + (x + 0.5) * cell, 12 + (y + 0.5) * cell);
+      if (marks) {
+        ctx.strokeStyle = "#111111";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(12 + x * cell + 2, 12 + y * cell + 2, cell - 4, cell - 4);
+      }
     });
   });
-  void marks;
 }
 
 if (typeof document !== "undefined" && document.getElementById?.("ws-words")) mount(document);

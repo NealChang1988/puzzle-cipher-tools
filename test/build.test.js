@@ -26,6 +26,16 @@ test("action buttons wrap instead of scrolling sideways", () => {
   assertActionsWrap(readFileSync(new URL("../src/site.css", import.meta.url), "utf8"), "src");
 });
 
+test("desktop nav does not hide tools in a sideways scroll strip", () => {
+  const css = readFileSync(new URL("../src/site.css", import.meta.url), "utf8");
+  const blocks = css.match(/[^{}]*\.tools[^{]*\{[^}]*\}/g) || [];
+  assert.ok(blocks.length > 0);
+  for (const block of blocks) {
+    assert.equal(/overflow-x\s*:\s*(auto|scroll)/.test(block), false, block);
+  }
+  assert.match(css, /\.tools\s*\{[^}]*flex-wrap:\s*wrap/);
+});
+
 test("config keeps the site name and canonical origin in one file", () => {
   assert.equal(config.siteName, "Puzzle & Cipher Tools");
   assert.equal(config.canonicalOrigin, "https://puzzle-cipher-tools.example");

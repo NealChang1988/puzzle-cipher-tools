@@ -140,6 +140,7 @@ export function createElement(tag) {
       moveTo() {},
       lineTo() {},
       stroke() {},
+      strokeRect() {},
       canvas: el,
     };
     el.getContext = () => ctx;

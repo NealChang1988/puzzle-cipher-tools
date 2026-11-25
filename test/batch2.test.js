@@ -4,7 +4,7 @@ import test from "node:test";
 import { findPattern } from "../src/lib/crossword.js";
 import { hideOffensive, solveCryptogram } from "../src/lib/cryptogram.js";
 import { analyzeMaze, generateMaze, sameMaze } from "../src/lib/maze.js";
-import { mazeDocument } from "../src/lib/pdf.js";
+import { mazeDocument, wordSearchDocument, wordSearchPdf } from "../src/lib/pdf.js";
 import {
   cleanWord,
   countStraight,
@@ -76,6 +76,22 @@ test("word search placement rules, cleaning, and a word that does not fit", () =
   const tooLong = generateWordSearch({ text: "abcdefghijklmnop", size: 12, seed: 1 });
   assert.equal(tooLong.placed.length, 0);
   assert.match(tooLong.skipped[0].reason, /longer than the grid \(12\)/);
+  const example = generateWordSearch({
+    text: "cat, dog, elephant, zebra, lion, hippo, ice cream, T-Rex",
+    size: 12,
+    directions: SIMPLE_DIRECTIONS,
+    seed: 1,
+  });
+  const puzzlePage = wordSearchPdf(example, { title: "Example", answer: false });
+  const answerPage = wordSearchPdf(example, { title: "Example", answer: true });
+  assert.notEqual(puzzlePage.stream, answerPage.stream);
+  const boxes = answerPage.stream.match(/ re S/g) || [];
+  const letters = example.placed.reduce((sum, item) => sum + item.letters.length, 0);
+  assert.equal(boxes.length, letters);
+  assert.equal((puzzlePage.stream.match(/ re S/g) || []).length, 0);
+  const pdf = wordSearchDocument(example, "Example");
+  assert.equal(pdf.includes(answerPage.stream), true);
+  assert.notEqual(pdf.indexOf(puzzlePage.stream), pdf.lastIndexOf(" re S"));
 });
 
 test("cryptogram ranks the Lincoln line first", () => {
