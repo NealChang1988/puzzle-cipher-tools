@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anagram Solver – Find Every Word From Your Letters</title>
+<meta name="description" content="Rearrange every letter into real English words. Common words come first. The search runs in your browser.">
+<link rel="canonical" href="https://puzzle-cipher-tools.example/anagram-solver/">
+
+<meta property="og:title" content="Anagram Solver – Find Every Word From Your Letters">
+<meta property="og:description" content="Rearrange every letter into real English words. Common words come first. The search runs in your browser.">
+<meta property="og:url" content="https://puzzle-cipher-tools.example/anagram-solver/">
+<meta property="og:image" content="https://puzzle-cipher-tools.example/og/anagram.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1c1915">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+  <rect width="32" height="32" rx="8" fill="#efe6d6"></rect>
+  <circle cx="8" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="14" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="20" cy="16" r="2.1" fill="#1c1915"></circle>
+  <rect x="24" y="14.4" width="5.5" height="3.2" rx="1.2" fill="#9a3412"></rect>
+</svg><span>Puzzle &amp; Cipher Tools</span></a>
+  <nav class="tools" aria-label="Tools"><a href="/">Morse Code Translator</a><a href="/anagram-solver/" aria-current="page">Anagram Solver</a><a href="/unscramble-words/">Unscramble Words</a><a href="/sudoku-solver/">Sudoku Solver</a><a href="/wingdings-translator/">Wingdings Translator</a></nav>
+</header>
+<main class="wrap" id="main">
+<h1>Anagram Solver</h1>
+<p class="lede">Rearrange all of your letters into real words, with the most common words first.</p>
+<div class="tool-wrap" id="tool" data-default-mode="all">
+  <p class="where">Everything runs in your browser; nothing you type is uploaded.</p>
+  <section class="tool" aria-label="Anagram Solver">
+    <div class="field">
+      <label for="letters-input">Your letters</label>
+      <textarea id="letters-input" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+    </div>
+    <div class="choices">
+      <label><input type="radio" name="mode" id="mode-all" value="all" checked> Use all letters</label>
+      <label><input type="radio" name="mode" id="mode-any" value="any"> Any length</label>
+      <label>Shortest word <select id="min-length"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></label>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="btn-find"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"></circle><path d="M16 16l4 4"></path></svg><span class="btn-label">Find words</span></button>
+      <button type="button" class="btn" id="btn-copy"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg><span class="btn-label">Copy all</span></button>
+      <button type="button" class="btn" id="btn-clear"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"></path><path d="M9 7V5h6v2"></path><path d="M8 7l1 13h6l1-13"></path></svg><span class="btn-label">Clear</span></button>
+      <button type="button" class="btn" id="btn-more" hidden><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"></circle><path d="M16 16l4 4"></path></svg><span class="btn-label">Show more</span></button>
+    </div>
+    <div id="letters-results" class="results" aria-live="polite">Words you can spell will show up here.</div>
+    <p id="letters-status" class="status" role="status"></p>
+    <p class="fine">Words from the ENABLE word list. Not an official tournament word list.</p>
+    <p class="fine">Offensive words are hidden. Letters filled by a ? or * wildcard are underlined.</p>
+    <p class="limits">Up to 15 letters, plus at most 2 wildcards (? or *). The list shows 500 words at a time.</p>
+  </section>
+</div>
+<section class="how"><h2>How to use</h2><ol><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.2-.8L19 8.4 15.6 5 5 15.6 4 20z"></path><path d="M13.5 7.1l3.4 3.4"></path></svg></span><p>Type or paste letters into &quot;Your letters&quot;. Spaces and commas are removed for you.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3 11c.5.6 1 1.4 1 2h4c0-.6.5-1.4 1-2a6 6 0 0 0-3-11z"></path></svg></span><p>Leave &quot;Use all letters&quot; selected, or choose &quot;Any length&quot;, and set &quot;Shortest word&quot;.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg></span><p>Press &quot;Find words&quot;, then press &quot;Copy all&quot; or click a word to copy it.</p></li></ol></section>
+<section class="example"><h2>Example</h2><p>Jordan is writing a puzzle and checks every rearrangement of LISTEN.</p>
+<table><thead><tr><th>Before</th><th>After</th></tr></thead>
+<tbody><tr><td><pre>LISTEN</pre></td><td><pre>listen, silent, enlist, inlets, tinsel, elints</pre></td></tr></tbody></table></section>
+<section class="faq"><h2>FAQ</h2><details><summary>Why do listen and silent come first?</summary><p>Common words come first inside each length. A lower everyday-use score means a more common word. Longer lengths are listed before shorter ones.</p></details><details><summary>What does the underline on a letter mean?</summary><p>A ? or * can stand for any letter, up to two of them. The underlined letter is the one the wildcard filled in.</p></details><details><summary>Why is a word I know missing?</summary><p>The list is ENABLE, a public-domain word list. It is not a tournament list, and it has no names. Offensive words are hidden, and the result says how many were hidden.</p></details><details><summary>How is this different from the other letter page?</summary><p>This page starts on Use all letters, so every letter has to be used. <a href="/unscramble-words/">Unscramble Words</a> starts on Any length and also lists shorter words.</p></details><details><summary>What if it says no words were found?</summary><p>Take out a letter, lower Shortest word, or add a ? wildcard, then press Find words again.</p></details></section>
+<section class="more"><h2>More puzzle tools</h2><ul class="cards"><li class="card"><a href="/">Morse Code Translator</a><p>Turn dots and dashes into words, or words into sound.</p></li><li class="card"><a href="/unscramble-words/">Unscramble Words</a><p>Find every word those letters can spell.</p></li><li class="card"><a href="/sudoku-solver/">Sudoku Solver</a><p>Fill a 9 by 9 sudoku or ask for one hint.</p></li><li class="card"><a href="/wingdings-translator/">Wingdings Translator</a><p>Turn text into symbols and symbols back into text.</p></li></ul></section>
+</main>
+<footer class="foot">
+  <div class="inner">
+    <nav aria-label="About this site">
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/credits/">Credits</a>
+      <a href="mailto:alan.chang198807@gmail.com">Feedback</a>
+    </nav>
+    <p class="trade">Wingdings is a trademark of Microsoft Corporation. This site is not affiliated with or endorsed by Microsoft. No Microsoft font files are used.</p>
+  </div>
+</footer>
+<script type="module" src="/js/letters-page.js"></script>
+</body>
+</html>

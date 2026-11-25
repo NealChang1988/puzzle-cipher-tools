@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wingdings Translator – Text to Symbols and Back</title>
+<meta name="description" content="Turn text into Wingdings symbols and symbols back into text. The page uses its own font and does not download a Microsoft font.">
+<link rel="canonical" href="https://puzzle-cipher-tools.example/wingdings-translator/">
+
+<meta property="og:title" content="Wingdings Translator – Text to Symbols and Back">
+<meta property="og:description" content="Turn text into Wingdings symbols and symbols back into text. The page uses its own font and does not download a Microsoft font.">
+<meta property="og:url" content="https://puzzle-cipher-tools.example/wingdings-translator/">
+<meta property="og:image" content="https://puzzle-cipher-tools.example/og/wingdings.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1c1915">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/symbols.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+  <rect width="32" height="32" rx="8" fill="#efe6d6"></rect>
+  <circle cx="8" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="14" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="20" cy="16" r="2.1" fill="#1c1915"></circle>
+  <rect x="24" y="14.4" width="5.5" height="3.2" rx="1.2" fill="#9a3412"></rect>
+</svg><span>Puzzle &amp; Cipher Tools</span></a>
+  <nav class="tools" aria-label="Tools"><a href="/">Morse Code Translator</a><a href="/anagram-solver/">Anagram Solver</a><a href="/unscramble-words/">Unscramble Words</a><a href="/sudoku-solver/">Sudoku Solver</a><a href="/wingdings-translator/" aria-current="page">Wingdings Translator</a></nav>
+</header>
+<main class="wrap" id="main">
+<h1>Wingdings Translator</h1>
+<p class="lede">Turn normal text into Wingdings symbols, or turn those symbols back into text.</p>
+<div class="tool-wrap" id="tool">
+  <p class="where">Everything runs in your browser; nothing you type is uploaded.</p>
+  <section class="tool" aria-label="Wingdings Translator">
+    <div class="pair">
+      <div class="field">
+        <label for="wd-text">Text</label>
+        <textarea id="wd-text" rows="4" spellcheck="false" autocomplete="off"></textarea>
+      </div>
+      <div class="field">
+        <label for="wd-symbols">Symbols</label>
+        <textarea id="wd-symbols" class="symbols" rows="4" spellcheck="false" autocomplete="off" placeholder="Symbols will show up here."></textarea>
+      </div>
+    </div>
+    <p id="wd-note" class="note" role="status"></p>
+    <div class="actions">
+      <button type="button" class="btn primary" id="btn-copy-symbols"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg><span class="btn-label">Copy symbols</span></button>
+      <button type="button" class="btn" id="btn-copy-text"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg><span class="btn-label">Copy text</span></button>
+      <button type="button" class="btn" id="btn-png"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"></rect><path d="M8 14l2.5-2.5L14 15l2-2 2 2"></path></svg><span class="btn-label">Download PNG</span></button>
+      <button type="button" class="btn" id="btn-clear"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"></path><path d="M9 7V5h6v2"></path><path d="M8 7l1 13h6l1-13"></path></svg><span class="btn-label">Clear</span></button>
+    </div>
+    <p class="fine">The symbols use a font included with this site, so they should not show up as empty boxes. Wingdings is a trademark of Microsoft Corporation. This site is not affiliated with or endorsed by Microsoft. No Microsoft font files are used.</p>
+    <p class="limits">Up to 5,000 characters.</p>
+  </section>
+</div>
+<section class="how"><h2>How to use</h2><ol><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.2-.8L19 8.4 15.6 5 5 15.6 4 20z"></path><path d="M13.5 7.1l3.4 3.4"></path></svg></span><p>Type or paste normal text into &quot;Text&quot;, or paste symbols into &quot;Symbols&quot;.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3 11c.5.6 1 1.4 1 2h4c0-.6.5-1.4 1-2a6 6 0 0 0-3-11z"></path></svg></span><p>The other box updates as you type.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg></span><p>Press &quot;Copy symbols&quot; or &quot;Copy text&quot; to copy a result, or &quot;Download PNG&quot; to save a picture.</p></li></ol></section>
+<section class="example"><h2>Example</h2><p>Casey is writing a symbol note for a party game and starts with the word Hello.</p>
+<table><thead><tr><th>Before</th><th>After</th></tr></thead>
+<tbody><tr><td><pre>Hello</pre></td><td class="symbols"><pre>🖗︎♏︎⚫︎⚫︎🞏︎</pre></td></tr></tbody></table></section>
+<section class="faq"><h2>FAQ</h2><details><summary>Is this made by Microsoft?</summary><p>Wingdings is a trademark of Microsoft Corporation. This site is not affiliated with or endorsed by Microsoft. No Microsoft font files are used. The symbols are ordinary Unicode characters.</p></details><details><summary>Why did a letter like é stay the same?</summary><p>Only the 94 characters in the chart have a symbol. Anything else is left as you typed it, and the note under the boxes names it.</p></details><details><summary>Will the symbols show as empty boxes on my phone?</summary><p>The page loads its own font, a subset of Noto Sans Symbols and Noto Sans Symbols 2. You do not need a special font installed.</p></details><details><summary>Why are the symbols black and white instead of colorful pictures?</summary><p>Each symbol is followed by an invisible text-style mark so phones do not turn it into a color emoji. That mark is ignored when symbols are turned back into text.</p></details><details><summary>How do I send the symbols to a friend?</summary><p>Press Copy symbols and paste them into a message, or press Download PNG and send the picture. The picture is drawn with this site’s font.</p></details></section>
+<section class="reference">
+  <h2>Symbol chart</h2>
+  <p>These 94 characters are the printable marks from the exclamation point through the tilde. Capital and small letters are different.</p>
+  <ul class="chart"><li><span>!</span><span class="glyph symbols">🖉︎</span><span class="tag">U+1F589</span></li><li><span>&quot;</span><span class="glyph symbols">✂︎</span><span class="tag">U+2702</span></li><li><span>#</span><span class="glyph symbols">✁︎</span><span class="tag">U+2701</span></li><li><span>$</span><span class="glyph symbols">👓︎</span><span class="tag">U+1F453</span></li><li><span>%</span><span class="glyph symbols">🕭︎</span><span class="tag">U+1F56D</span></li><li><span>&amp;</span><span class="glyph symbols">🕮︎</span><span class="tag">U+1F56E</span></li><li><span>'</span><span class="glyph symbols">🕯︎</span><span class="tag">U+1F56F</span></li><li><span>(</span><span class="glyph symbols">🕿︎</span><span class="tag">U+1F57F</span></li><li><span>)</span><span class="glyph symbols">✆︎</span><span class="tag">U+2706</span></li><li><span>*</span><span class="glyph symbols">🖂︎</span><span class="tag">U+1F582</span></li><li><span>+</span><span class="glyph symbols">🖃︎</span><span class="tag">U+1F583</span></li><li><span>,</span><span class="glyph symbols">📪︎</span><span class="tag">U+1F4EA</span></li><li><span>-</span><span class="glyph symbols">📫︎</span><span class="tag">U+1F4EB</span></li><li><span>.</span><span class="glyph symbols">📬︎</span><span class="tag">U+1F4EC</span></li><li><span>/</span><span class="glyph symbols">📭︎</span><span class="tag">U+1F4ED</span></li><li><span>0</span><span class="glyph symbols">🗀︎</span><span class="tag">U+1F5C0</span></li><li><span>1</span><span class="glyph symbols">🗁︎</span><span class="tag">U+1F5C1</span></li><li><span>2</span><span class="glyph symbols">🗎︎</span><span class="tag">U+1F5CE</span></li><li><span>3</span><span class="glyph symbols">🗏︎</span><span class="tag">U+1F5CF</span></li><li><span>4</span><span class="glyph symbols">🗐︎</span><span class="tag">U+1F5D0</span></li><li><span>5</span><span class="glyph symbols">🗄︎</span><span class="tag">U+1F5C4</span></li><li><span>6</span><span class="glyph symbols">⏳︎</span><span class="tag">U+23F3</span></li><li><span>7</span><span class="glyph symbols">🖮︎</span><span class="tag">U+1F5AE</span></li><li><span>8</span><span class="glyph symbols">🖰︎</span><span class="tag">U+1F5B0</span></li><li><span>9</span><span class="glyph symbols">🖲︎</span><span class="tag">U+1F5B2</span></li><li><span>:</span><span class="glyph symbols">🖳︎</span><span class="tag">U+1F5B3</span></li><li><span>;</span><span class="glyph symbols">🖴︎</span><span class="tag">U+1F5B4</span></li><li><span>&lt;</span><span class="glyph symbols">🖫︎</span><span class="tag">U+1F5AB</span></li><li><span>=</span><span class="glyph symbols">🖬︎</span><span class="tag">U+1F5AC</span></li><li><span>&gt;</span><span class="glyph symbols">✇︎</span><span class="tag">U+2707</span></li><li><span>?</span><span class="glyph symbols">✍︎</span><span class="tag">U+270D</span></li><li><span>@</span><span class="glyph symbols">🖎︎</span><span class="tag">U+1F58E</span></li><li><span>A</span><span class="glyph symbols">✌︎</span><span class="tag">U+270C</span></li><li><span>B</span><span class="glyph symbols">🖏︎</span><span class="tag">U+1F58F</span></li><li><span>C</span><span class="glyph symbols">👍︎</span><span class="tag">U+1F44D</span></li><li><span>D</span><span class="glyph symbols">👎︎</span><span class="tag">U+1F44E</span></li><li><span>E</span><span class="glyph symbols">☜︎</span><span class="tag">U+261C</span></li><li><span>F</span><span class="glyph symbols">☞︎</span><span class="tag">U+261E</span></li><li><span>G</span><span class="glyph symbols">☝︎</span><span class="tag">U+261D</span></li><li><span>H</span><span class="glyph symbols">🖗︎</span><span class="tag">U+1F597</span></li><li><span>I</span><span class="glyph symbols">🖐︎</span><span class="tag">U+1F590</span></li><li><span>J</span><span class="glyph symbols">☺︎</span><span class="tag">U+263A</span></li><li><span>K</span><span class="glyph symbols">😐︎</span><span class="tag">U+1F610</span></li><li><span>L</span><span class="glyph symbols">☹︎</span><span class="tag">U+2639</span></li><li><span>M</span><span class="glyph symbols">💣︎</span><span class="tag">U+1F4A3</span></li><li><span>N</span><span class="glyph symbols">🕱︎</span><span class="tag">U+1F571</span></li><li><span>O</span><span class="glyph symbols">🏳︎</span><span class="tag">U+1F3F3</span></li><li><span>P</span><span class="glyph symbols">🏱︎</span><span class="tag">U+1F3F1</span></li><li><span>Q</span><span class="glyph symbols">✈︎</span><span class="tag">U+2708</span></li><li><span>R</span><span class="glyph symbols">☼︎</span><span class="tag">U+263C</span></li><li><span>S</span><span class="glyph symbols">🌢︎</span><span class="tag">U+1F322</span></li><li><span>T</span><span class="glyph symbols">❄︎</span><span class="tag">U+2744</span></li><li><span>U</span><span class="glyph symbols">🕆︎</span><span class="tag">U+1F546</span></li><li><span>V</span><span class="glyph symbols">✞︎</span><span class="tag">U+271E</span></li><li><span>W</span><span class="glyph symbols">🕈︎</span><span class="tag">U+1F548</span></li><li><span>X</span><span class="glyph symbols">✠︎</span><span class="tag">U+2720</span></li><li><span>Y</span><span class="glyph symbols">✡︎</span><span class="tag">U+2721</span></li><li><span>Z</span><span class="glyph symbols">☪︎</span><span class="tag">U+262A</span></li><li><span>[</span><span class="glyph symbols">☯︎</span><span class="tag">U+262F</span></li><li><span>\</span><span class="glyph symbols">🕉︎</span><span class="tag">U+1F549</span></li><li><span>]</span><span class="glyph symbols">☸︎</span><span class="tag">U+2638</span></li><li><span>^</span><span class="glyph symbols">♈︎</span><span class="tag">U+2648</span></li><li><span>_</span><span class="glyph symbols">♉︎</span><span class="tag">U+2649</span></li><li><span>`</span><span class="glyph symbols">♊︎</span><span class="tag">U+264A</span></li><li><span>a</span><span class="glyph symbols">♋︎</span><span class="tag">U+264B</span></li><li><span>b</span><span class="glyph symbols">♌︎</span><span class="tag">U+264C</span></li><li><span>c</span><span class="glyph symbols">♍︎</span><span class="tag">U+264D</span></li><li><span>d</span><span class="glyph symbols">♎︎</span><span class="tag">U+264E</span></li><li><span>e</span><span class="glyph symbols">♏︎</span><span class="tag">U+264F</span></li><li><span>f</span><span class="glyph symbols">♐︎</span><span class="tag">U+2650</span></li><li><span>g</span><span class="glyph symbols">♑︎</span><span class="tag">U+2651</span></li><li><span>h</span><span class="glyph symbols">♒︎</span><span class="tag">U+2652</span></li><li><span>i</span><span class="glyph symbols">♓︎</span><span class="tag">U+2653</span></li><li><span>j</span><span class="glyph symbols">🙰︎</span><span class="tag">U+1F670</span></li><li><span>k</span><span class="glyph symbols">🙵︎</span><span class="tag">U+1F675</span></li><li><span>l</span><span class="glyph symbols">⚫︎</span><span class="tag">U+26AB</span></li><li><span>m</span><span class="glyph symbols">🔾︎</span><span class="tag">U+1F53E</span></li><li><span>n</span><span class="glyph symbols">◼︎</span><span class="tag">U+25FC</span></li><li><span>o</span><span class="glyph symbols">🞏︎</span><span class="tag">U+1F78F</span></li><li><span>p</span><span class="glyph symbols">🞐︎</span><span class="tag">U+1F790</span></li><li><span>q</span><span class="glyph symbols">❑︎</span><span class="tag">U+2751</span></li><li><span>r</span><span class="glyph symbols">❒︎</span><span class="tag">U+2752</span></li><li><span>s</span><span class="glyph symbols">🞟︎</span><span class="tag">U+1F79F</span></li><li><span>t</span><span class="glyph symbols">⧫︎</span><span class="tag">U+29EB</span></li><li><span>u</span><span class="glyph symbols">◆︎</span><span class="tag">U+25C6</span></li><li><span>v</span><span class="glyph symbols">❖︎</span><span class="tag">U+2756</span></li><li><span>w</span><span class="glyph symbols">🞙︎</span><span class="tag">U+1F799</span></li><li><span>x</span><span class="glyph symbols">⌧︎</span><span class="tag">U+2327</span></li><li><span>y</span><span class="glyph symbols">⮹︎</span><span class="tag">U+2BB9</span></li><li><span>z</span><span class="glyph symbols">⌘︎</span><span class="tag">U+2318</span></li><li><span>{</span><span class="glyph symbols">🏵︎</span><span class="tag">U+1F3F5</span></li><li><span>|</span><span class="glyph symbols">🏶︎</span><span class="tag">U+1F3F6</span></li><li><span>}</span><span class="glyph symbols">🙶︎</span><span class="tag">U+1F676</span></li><li><span>~</span><span class="glyph symbols">🙷︎</span><span class="tag">U+1F677</span></li></ul>
+</section>
+<section class="more"><h2>More puzzle tools</h2><ul class="cards"><li class="card"><a href="/">Morse Code Translator</a><p>Turn dots and dashes into words, or words into sound.</p></li><li class="card"><a href="/anagram-solver/">Anagram Solver</a><p>Use every letter to find real words.</p></li><li class="card"><a href="/unscramble-words/">Unscramble Words</a><p>Find every word those letters can spell.</p></li><li class="card"><a href="/sudoku-solver/">Sudoku Solver</a><p>Fill a 9 by 9 sudoku or ask for one hint.</p></li></ul></section>
+</main>
+<footer class="foot">
+  <div class="inner">
+    <nav aria-label="About this site">
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/credits/">Credits</a>
+      <a href="mailto:alan.chang198807@gmail.com">Feedback</a>
+    </nav>
+    <p class="trade">Wingdings is a trademark of Microsoft Corporation. This site is not affiliated with or endorsed by Microsoft. No Microsoft font files are used.</p>
+  </div>
+</footer>
+<script type="module" src="/js/wingdings-page.js"></script>
+</body>
+</html>

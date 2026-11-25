@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morse Code Translator – Text to Morse &amp; Morse to Text, with Sound</title>
+<meta name="description" content="Turn text into Morse code or Morse code into text, then copy it, play it, or download a sound file. Everything runs in your browser.">
+<link rel="canonical" href="https://puzzle-cipher-tools.example/">
+
+<meta property="og:title" content="Morse Code Translator – Text to Morse &amp; Morse to Text, with Sound">
+<meta property="og:description" content="Turn text into Morse code or Morse code into text, then copy it, play it, or download a sound file. Everything runs in your browser.">
+<meta property="og:url" content="https://puzzle-cipher-tools.example/">
+<meta property="og:image" content="https://puzzle-cipher-tools.example/og/morse.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1c1915">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+  <rect width="32" height="32" rx="8" fill="#efe6d6"></rect>
+  <circle cx="8" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="14" cy="16" r="2.1" fill="#1c1915"></circle>
+  <circle cx="20" cy="16" r="2.1" fill="#1c1915"></circle>
+  <rect x="24" y="14.4" width="5.5" height="3.2" rx="1.2" fill="#9a3412"></rect>
+</svg><span>Puzzle &amp; Cipher Tools</span></a>
+  <nav class="tools" aria-label="Tools"><a href="/" aria-current="page">Morse Code Translator</a><a href="/anagram-solver/">Anagram Solver</a><a href="/unscramble-words/">Unscramble Words</a><a href="/sudoku-solver/">Sudoku Solver</a><a href="/wingdings-translator/">Wingdings Translator</a></nav>
+</header>
+<main class="wrap" id="main">
+<h1>Morse Code Translator</h1>
+<p class="lede">Turn text into Morse code, or Morse code back into text, and play it as sound.</p>
+<div class="tool-wrap" id="tool">
+  <p class="where">Everything runs in your browser; nothing you type is uploaded.</p>
+  <section class="tool" aria-label="Morse Code Translator">
+    <div class="pair">
+      <div class="field">
+        <label for="morse-input">Your message</label>
+        <textarea id="morse-input" rows="4" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      </div>
+      <div class="field">
+        <label for="morse-output">Result</label>
+        <textarea id="morse-output" rows="4" readonly spellcheck="false" placeholder="The Morse code or the words will show up here."></textarea>
+      </div>
+    </div>
+    <p id="morse-unknown" class="note" role="status"></p>
+    <div class="modes" role="group" aria-label="Direction">
+      <button type="button" id="mode-auto" aria-pressed="true">Auto</button>
+      <button type="button" id="mode-text" aria-pressed="false">Text to Morse</button>
+      <button type="button" id="mode-morse" aria-pressed="false">Morse to text</button>
+    </div>
+    <div class="sliders">
+      <label>Speed (WPM) <input id="wpm" type="range" min="5" max="40" value="20"> <span id="wpm-value">20</span></label>
+      <label>Pitch (Hz) <input id="pitch" type="range" min="400" max="1000" step="10" value="600"> <span id="pitch-value">600</span></label>
+    </div>
+    <p class="hint">Speed (WPM) is words per minute. 20 is a usual speed. One dot lasts 1,200 divided by that number, in milliseconds. Pitch is how high the tone is.</p>
+    <div class="actions">
+      <button type="button" class="btn primary" id="btn-copy"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg><span class="btn-label">Copy</span></button>
+      <button type="button" class="btn" id="btn-play"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6l10 6-10 6V6z"></path></svg><span class="btn-label">Play sound</span></button>
+      <button type="button" class="btn" id="btn-stop"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.5"></rect></svg><span class="btn-label">Stop</span></button>
+      <button type="button" class="btn" id="btn-wav"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"></path><path d="M8 10l4 4 4-4"></path><path d="M5 19h14"></path></svg><span class="btn-label">Download WAV</span></button>
+      <button type="button" class="btn" id="btn-txt"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10"></path><path d="M8 10l4 4 4-4"></path><path d="M5 19h14"></path></svg><span class="btn-label">Download TXT</span></button>
+      <button type="button" class="btn" id="btn-share"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a4 4 0 0 0 6 0l2-2a4 4 0 0 0-6-6l-1 1"></path><path d="M14 11a4 4 0 0 0-6 0l-2 2a4 4 0 0 0 6 6l1-1"></path></svg><span class="btn-label">Share link</span></button>
+      <button type="button" class="btn" id="btn-clear"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"></path><path d="M9 7V5h6v2"></path><path d="M8 7l1 13h6l1-13"></path></svg><span class="btn-label">Clear</span></button>
+    </div>
+    <p id="morse-status" class="status" role="status"></p>
+    <p class="limits">Up to 10,000 characters at a time. Sound is limited to 10 minutes.</p>
+  </section>
+</div>
+<section class="how"><h2>How to use</h2><ol><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.2-.8L19 8.4 15.6 5 5 15.6 4 20z"></path><path d="M13.5 7.1l3.4 3.4"></path></svg></span><p>Type or paste into &quot;Your message&quot;. The box turns text into Morse code, or Morse code into text, on its own.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 21h4"></path><path d="M12 3a6 6 0 0 0-3 11c.5.6 1 1.4 1 2h4c0-.6.5-1.4 1-2a6 6 0 0 0-3-11z"></path></svg></span><p>Press &quot;Play sound&quot; to hear it, or &quot;Stop&quot; to end the sound.</p></li><li><span class="step-icon"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="12" rx="1.5"></rect><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"></path></svg></span><p>Press &quot;Copy&quot; to copy the result, &quot;Download WAV&quot; or &quot;Download TXT&quot; to save a file, or &quot;Share link&quot; to copy a link.</p></li></ol></section>
+<section class="example"><h2>Example</h2><p>Sam is in an escape room and types a messy note. The marks are bullets and long dashes, with uneven spaces.</p>
+<table><thead><tr><th>Before</th><th>After</th></tr></thead>
+<tbody><tr><td><pre>•••  −−−  •••</pre></td><td><pre>SOS</pre></td></tr></tbody></table></section>
+<section class="faq"><h2>FAQ</h2><details><summary>Why did uneven spaces still come out as SOS?</summary><p>When every gap is two spaces or more, and there is no slash or new line, those gaps sit between letters of one word. Sam’s note is the three letters of SOS.</p></details><details><summary>What happens to a character like #?</summary><p>A mark with no Morse code is left out of the result. The line under the boxes lists it, for example the # in a clue such as Escape room clue #4.</p></details><details><summary>What does the slash in the result mean?</summary><p>A slash with spaces around it is the gap between words. Letters inside a word are separated by one space.</p></details><details><summary>Why will a very long message not play?</summary><p>Sound stops at 10 minutes so the page does not freeze. Shorten the message or raise Speed (WPM), then press Play sound again.</p></details><details><summary>Does Share link upload what I typed?</summary><p>No. The words are placed after a # in the link. Browsers do not send that part to the site.</p></details></section>
+<section class="reference">
+  <h2>Morse code chart</h2>
+  <p>ITU-R M.1677-1 is the international Morse code standard. Five marks are labeled “Common, not an ITU standard” because people use them, but they are not part of that standard.</p>
+  <ul class="chart"><li><span class="glyph">A</span><code>.-</code><span class="tag">ITU standard</span></li><li><span class="glyph">B</span><code>-...</code><span class="tag">ITU standard</span></li><li><span class="glyph">C</span><code>-.-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">D</span><code>-..</code><span class="tag">ITU standard</span></li><li><span class="glyph">E</span><code>.</code><span class="tag">ITU standard</span></li><li><span class="glyph">F</span><code>..-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">G</span><code>--.</code><span class="tag">ITU standard</span></li><li><span class="glyph">H</span><code>....</code><span class="tag">ITU standard</span></li><li><span class="glyph">I</span><code>..</code><span class="tag">ITU standard</span></li><li><span class="glyph">J</span><code>.---</code><span class="tag">ITU standard</span></li><li><span class="glyph">K</span><code>-.-</code><span class="tag">ITU standard</span></li><li><span class="glyph">L</span><code>.-..</code><span class="tag">ITU standard</span></li><li><span class="glyph">M</span><code>--</code><span class="tag">ITU standard</span></li><li><span class="glyph">N</span><code>-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">O</span><code>---</code><span class="tag">ITU standard</span></li><li><span class="glyph">P</span><code>.--.</code><span class="tag">ITU standard</span></li><li><span class="glyph">Q</span><code>--.-</code><span class="tag">ITU standard</span></li><li><span class="glyph">R</span><code>.-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">S</span><code>...</code><span class="tag">ITU standard</span></li><li><span class="glyph">T</span><code>-</code><span class="tag">ITU standard</span></li><li><span class="glyph">U</span><code>..-</code><span class="tag">ITU standard</span></li><li><span class="glyph">V</span><code>...-</code><span class="tag">ITU standard</span></li><li><span class="glyph">W</span><code>.--</code><span class="tag">ITU standard</span></li><li><span class="glyph">X</span><code>-..-</code><span class="tag">ITU standard</span></li><li><span class="glyph">Y</span><code>-.--</code><span class="tag">ITU standard</span></li><li><span class="glyph">Z</span><code>--..</code><span class="tag">ITU standard</span></li><li><span class="glyph">0</span><code>-----</code><span class="tag">ITU standard</span></li><li><span class="glyph">1</span><code>.----</code><span class="tag">ITU standard</span></li><li><span class="glyph">2</span><code>..---</code><span class="tag">ITU standard</span></li><li><span class="glyph">3</span><code>...--</code><span class="tag">ITU standard</span></li><li><span class="glyph">4</span><code>....-</code><span class="tag">ITU standard</span></li><li><span class="glyph">5</span><code>.....</code><span class="tag">ITU standard</span></li><li><span class="glyph">6</span><code>-....</code><span class="tag">ITU standard</span></li><li><span class="glyph">7</span><code>--...</code><span class="tag">ITU standard</span></li><li><span class="glyph">8</span><code>---..</code><span class="tag">ITU standard</span></li><li><span class="glyph">9</span><code>----.</code><span class="tag">ITU standard</span></li><li><span class="glyph">É</span><code>..-..</code><span class="tag">ITU standard</span></li><li><span class="glyph">.</span><code>.-.-.-</code><span class="tag">ITU standard</span></li><li><span class="glyph">,</span><code>--..--</code><span class="tag">ITU standard</span></li><li><span class="glyph">:</span><code>---...</code><span class="tag">ITU standard</span></li><li><span class="glyph">?</span><code>..--..</code><span class="tag">ITU standard</span></li><li><span class="glyph">'</span><code>.----.</code><span class="tag">ITU standard</span></li><li><span class="glyph">-</span><code>-....-</code><span class="tag">ITU standard</span></li><li><span class="glyph">/</span><code>-..-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">(</span><code>-.--.</code><span class="tag">ITU standard</span></li><li><span class="glyph">)</span><code>-.--.-</code><span class="tag">ITU standard</span></li><li><span class="glyph">&quot;</span><code>.-..-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">=</span><code>-...-</code><span class="tag">ITU standard</span></li><li><span class="glyph">+</span><code>.-.-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">@</span><code>.--.-.</code><span class="tag">ITU standard</span></li><li><span class="glyph">!</span><code>-.-.--</code><span class="tag common">Common, not an ITU standard</span></li><li><span class="glyph">&amp;</span><code>.-...</code><span class="tag common">Common, not an ITU standard</span></li><li><span class="glyph">;</span><code>-.-.-.</code><span class="tag common">Common, not an ITU standard</span></li><li><span class="glyph">_</span><code>..--.-</code><span class="tag common">Common, not an ITU standard</span></li><li><span class="glyph">$</span><code>...-..-</code><span class="tag common">Common, not an ITU standard</span></li></ul>
+</section>
+<section class="more"><h2>More puzzle tools</h2><ul class="cards"><li class="card"><a href="/anagram-solver/">Anagram Solver</a><p>Use every letter to find real words.</p></li><li class="card"><a href="/unscramble-words/">Unscramble Words</a><p>Find every word those letters can spell.</p></li><li class="card"><a href="/sudoku-solver/">Sudoku Solver</a><p>Fill a 9 by 9 sudoku or ask for one hint.</p></li><li class="card"><a href="/wingdings-translator/">Wingdings Translator</a><p>Turn text into symbols and symbols back into text.</p></li></ul></section>
+</main>
+<footer class="foot">
+  <div class="inner">
+    <nav aria-label="About this site">
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/credits/">Credits</a>
+      <a href="mailto:alan.chang198807@gmail.com">Feedback</a>
+    </nav>
+    <p class="trade">Wingdings is a trademark of Microsoft Corporation. This site is not affiliated with or endorsed by Microsoft. No Microsoft font files are used.</p>
+  </div>
+</footer>
+<script type="module" src="/js/morse-page.js"></script>
+</body>
+</html>
