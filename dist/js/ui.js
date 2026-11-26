@@ -73,9 +73,10 @@ export function slugName(text, fallback) {
   const slug = String(text)
     .normalize("NFKC")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 24);
+    .replace(/[<>:"/\\|?*\u0000-\u001f]+/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/^[. -]+|[. -]+$/g, "")
+    .slice(0, 40);
   return slug || fallback;
 }
 

@@ -58,8 +58,10 @@ export function mazeBody() {
         <label>Line thickness <input id="maze-thickness" type="number" min="1" max="8" value="2"></label>
       </div>
     </div>
-    <p id="maze-status" class="status" role="status">The maze will show up here.</p>
-    <canvas id="maze-view" class="maze-canvas" width="320" height="180" aria-label="Maze"></canvas>
+    <p id="maze-status" class="status" role="status" aria-live="polite">The maze will show up here.</p>
+    <div class="maze-board" id="maze-board">
+      <canvas id="maze-view" class="maze-canvas" width="320" height="180" aria-label="Maze"></canvas>
+    </div>
     <canvas id="maze-answer" class="maze-canvas print-answer answer-only" width="320" height="180" aria-label="Maze answer"></canvas>
     <div class="actions">
       ${button("btn-new", "New maze", "refresh", "primary")}
@@ -119,7 +121,7 @@ export function wordSearchBody() {
       <textarea id="ws-words" rows="3" spellcheck="false" placeholder="One word on each line, or separated by commas"></textarea>
       ${button("btn-example", "Try example", "pencil")}
     </div>
-    <p id="ws-status" class="status" role="status"></p>
+    <p id="ws-status" class="status" role="status" aria-live="polite"></p>
     <div id="ws-puzzle" class="sheet">Your word search will show up here.</div>
     <div class="controls">
       <div class="choices">

@@ -1,6 +1,7 @@
 import { generateMaze, neighbors } from "../lib/maze.js";
 import { mazeDocument } from "../lib/pdf.js";
-import { downloadBlob, syncPrintTitle, withBusy } from "./ui.js";
+import { downloadBlob, slugName, syncPrintTitle, withBusy } from "./ui.js";
+import { titleImage } from "../lib/pdf.js";
 
 const CELL = 18;
 
@@ -34,6 +35,7 @@ export function mount(doc) {
   const seed = doc.getElementById("maze-seed");
   const thickness = doc.getElementById("maze-thickness");
   const view = doc.getElementById("maze-view");
+  const board = doc.getElementById("maze-board");
   const answer = doc.getElementById("maze-answer");
   const titleInput = doc.getElementById("maze-title");
   let maze = null;
@@ -42,13 +44,25 @@ export function mount(doc) {
   let player = [];
   let drawing = false;
   let ignoreMouse = 0;
+  let pan = null;
   if (!seed.value) seed.value = "12345";
 
   function say(text) {
     status.textContent = text;
   }
+  function lineWidth() {
+    return Number(thickness.value) || 2;
+  }
   function readSize() {
     return { w: Number(width.value), h: Number(height.value), s: Number(seed.value) };
+  }
+  function showPlay() {
+    if (board?.style?.setProperty) board.style.setProperty("--cols", String(maze?.width || 10));
+    paint(view, maze, false, lineWidth(), player, true);
+  }
+  function showClean() {
+    if (!maze) return;
+    paint(view, maze, false, lineWidth());
   }
   function draw() {
     const made = generateMaze(readSize().w, readSize().h, readSize().s);
@@ -58,17 +72,16 @@ export function mount(doc) {
     }
     maze = made;
     player = [];
-    const line = Number(thickness.value) || 2;
-    paint(view, maze, false, line, player);
-    paint(answer, maze, true, line);
+    showPlay();
+    paint(answer, maze, true, lineWidth());
     answer.classList.toggle("answer-only", !show);
     say(
-      `Maze ${maze.width} by ${maze.height}, seed ${maze.seed}. The entrance is the top-left opening and the exit is the bottom-right opening.`,
+      `Maze ${maze.width} by ${maze.height}, seed ${maze.seed}. Start drawing at the marked entrance, the top-left opening.`,
     );
   }
 
   function redrawPlay() {
-    paint(view, maze, false, Number(thickness.value) || 2, player);
+    showPlay();
     const last = player[player.length - 1];
     if (last && last[0] === maze.width - 1 && last[1] === maze.height - 1) say("You reached the exit.");
   }
@@ -78,7 +91,7 @@ export function mount(doc) {
     if (!rect.width || !rect.height) return null;
     const x = ((clientX - rect.left) * view.width) / rect.width;
     const y = ((clientY - rect.top) * view.height) / rect.height;
-    const { cell, pad } = metrics(Number(thickness.value) || 2);
+    const { cell, pad } = metrics(lineWidth());
     const cx = Math.floor((x - pad) / cell);
     const cy = Math.floor((y - pad) / cell);
     if (cx < 0 || cy < 0 || cx >= maze.width || cy >= maze.height) return null;
@@ -87,7 +100,10 @@ export function mount(doc) {
   function step(cell) {
     if (!cell) return;
     if (!player.length) {
-      if (cell[0] === 0 && cell[1] === 0) player = [[0, 0]];
+      if (cell[0] === 0 && cell[1] === 0) {
+        player = [[0, 0]];
+        say("Draw through the open path to the bottom-right exit.");
+      } else say("Start at the marked entrance in the top-left cell.");
       return;
     }
     const index = player.findIndex(([x, y]) => x === cell[0] && y === cell[1]);
@@ -98,6 +114,7 @@ export function mount(doc) {
     const last = player[player.length - 1];
     const open = neighbors(maze, last[0], last[1]).some(([x, y]) => x === cell[0] && y === cell[1]);
     if (open) player.push(cell);
+    else say("That cell is blocked by a wall. Stay on the open path.");
   }
   function down(x, y) {
     drawing = true;
@@ -124,12 +141,25 @@ export function mount(doc) {
   });
   view.addEventListener("touchstart", (event) => {
     ignoreMouse = Date.now() + 1000;
+    if (event.touches?.length > 1) {
+      drawing = false;
+      pan = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      return;
+    }
+    pan = null;
     const touch = event.changedTouches?.[0] || event.touches?.[0];
     if (!touch) return;
     event.preventDefault?.();
     down(touch.clientX, touch.clientY);
   });
   view.addEventListener("touchmove", (event) => {
+    if (event.touches?.length > 1 && pan && board) {
+      board.scrollLeft -= event.touches[0].clientX - pan.x;
+      board.scrollTop -= event.touches[0].clientY - pan.y;
+      pan = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      event.preventDefault?.();
+      return;
+    }
     const touch = event.changedTouches?.[0] || event.touches?.[0];
     if (!touch) return;
     event.preventDefault?.();
@@ -138,12 +168,18 @@ export function mount(doc) {
   view.addEventListener("touchend", (event) => {
     ignoreMouse = Date.now() + 1000;
     drawing = false;
+    pan = null;
     event.preventDefault?.();
+  });
+  globalThis.addEventListener?.("beforeprint", showClean);
+  globalThis.addEventListener?.("afterprint", () => {
+    if (maze) showPlay();
   });
 
   doc.getElementById("btn-new").addEventListener("click", () =>
     withBusy(doc.getElementById("btn-new"), async () => {
       seed.value = freshSeed();
+      seedEdited = false;
       draw();
     }),
   );
@@ -180,12 +216,15 @@ export function mount(doc) {
   doc.getElementById("btn-png").addEventListener("click", () =>
     withBusy(doc.getElementById("btn-png"), async () => {
       if (!maze) draw();
-      const blob = await canvasBlob(view);
+      const shot = doc.createElement("canvas");
+      paint(shot, maze, false, lineWidth());
+      const blob = await canvasBlob(shot);
       if (!blob) {
         say("The picture could not be created. Press Download PDF instead.");
         return;
       }
-      const name = `maze-${maze.width}x${maze.height}-seed-${maze.seed}.png`;
+      const title = titleInput?.value.trim();
+      const name = `maze-${title ? `${slugName(title, "maze")}-` : ""}${maze.width}x${maze.height}-seed-${maze.seed}.png`;
       downloadBlob(doc, name, blob);
       say(`Downloaded ${name}.`);
     }),
@@ -193,8 +232,9 @@ export function mount(doc) {
   doc.getElementById("btn-pdf").addEventListener("click", () =>
     withBusy(doc.getElementById("btn-pdf"), async () => {
       if (!maze) draw();
-      const pdf = mazeDocument(maze, titleInput?.value || "");
-      const name = `maze-${maze.width}x${maze.height}-seed-${maze.seed}.pdf`;
+      const title = titleInput?.value.trim() || "";
+      const pdf = mazeDocument(maze, title, titleImage(title));
+      const name = `maze-${title ? `${slugName(title, "maze")}-` : ""}${maze.width}x${maze.height}-seed-${maze.seed}.pdf`;
       downloadBlob(doc, name, new Blob([pdf], { type: "application/pdf" }));
       say(`Downloaded ${name}. Page 1 is the maze. Page 2 is the answer.`);
     }),
@@ -202,7 +242,7 @@ export function mount(doc) {
   draw();
 }
 
-export function paint(canvas, maze, showSolution, lineWidth, path) {
+export function paint(canvas, maze, showSolution, lineWidth, path, showStart) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const { cell, pad } = metrics(lineWidth);
@@ -238,6 +278,12 @@ export function paint(canvas, maze, showSolution, lineWidth, path) {
     }
   }
   ctx.stroke();
+  if (showStart && ctx.arc) {
+    ctx.fillStyle = "#0f5e56";
+    ctx.beginPath();
+    ctx.arc(pad + cell * 0.5, pad + cell * 0.5, Math.max(3, cell * 0.18), 0, Math.PI * 2);
+    ctx.fill();
+  }
   if (path?.length) {
     ctx.strokeStyle = "#0f5e56";
     ctx.lineWidth = Math.max(3, lineWidth + 1);
