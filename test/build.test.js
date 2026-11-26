@@ -43,10 +43,23 @@ test("desktop nav is a plain list, not a closed details menu", () => {
 
 test("config keeps the site name and canonical origin in one file", () => {
   assert.equal(config.siteName, "Puzzle & Cipher Tools");
-  assert.equal(config.canonicalOrigin, "https://puzzle-cipher-tools.example");
+  assert.equal(config.canonicalOrigin, "https://puzzleandcipher.com");
   assert.equal(config.feedbackEmail, "alan.chang198807@gmail.com");
   for (const banned of ["Wingdings", "Scrabble", "Wordle", "Boggle"]) {
     assert.equal(config.siteName.includes(banned), false);
+  }
+});
+
+test("SITE_URL overrides the canonical origin", () => {
+  const previous = process.env.SITE_URL;
+  process.env.SITE_URL = "https://preview.example/";
+  try {
+    const overridden = loadConfig();
+    assert.equal(overridden.canonicalOrigin, "https://preview.example");
+    assert.match(sitemapXml(overridden), /<loc>https:\/\/preview\.example\/anagram-solver\/<\/loc>/);
+  } finally {
+    if (previous === undefined) delete process.env.SITE_URL;
+    else process.env.SITE_URL = previous;
   }
 });
 
@@ -72,7 +85,7 @@ test("production pages use the spec titles and do not noindex", () => {
   assert.match(sitemapXml(config), /\/cryptogram-solver\//);
   assert.match(sitemapXml(config), /\/crossword-solver\//);
   assert.equal(sitemapXml(config).includes("/word-search-maker/"), false);
-  assert.match(sitemapXml(config), /<loc>https:\/\/puzzle-cipher-tools\.example\/anagram-solver\/<\/loc>/);
+  assert.match(sitemapXml(config), /<loc>https:\/\/puzzleandcipher\.com\/anagram-solver\/<\/loc>/);
   assert.match(robotsTxt(config, false), /Allow: \//);
   assert.equal(robotsTxt(config, false).includes("Disallow"), false);
   assert.match(robotsTxt(config, true), /Disallow: \//);
