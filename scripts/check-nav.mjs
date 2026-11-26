@@ -755,6 +755,43 @@ try {
   lines.push(panRow);
   console.log(panRow);
   if (!panOk) problems.push({ panRow, beforePan, panStatus, ended });
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+  const turnSeeds = [586791, 912292, 431932, 868627, 747330];
+  for (const seed of turnSeeds) {
+    await go("/maze-generator/");
+    await value(`new Promise((resolve) => {
+      const start = Date.now();
+      const tick = () => {
+        if (!document.getElementById("maze-status").textContent.includes("seed")) {
+          if (Date.now() - start > 5000) resolve(false);
+          else setTimeout(tick, 50);
+          return;
+        }
+        document.getElementById("maze-width").value = "10";
+        document.getElementById("maze-height").value = "10";
+        document.getElementById("maze-seed").value = "${seed}";
+        document.getElementById("maze-seed").dispatchEvent(new Event("change", { bubbles: true }));
+        resolve(true);
+      };
+      tick();
+    })`);
+    const route = generateMaze(10, 10, seed).solution;
+    const points = [];
+    for (let i = 0; i < route.length; i += 3) points.push(await cellPoint(route[i][0], route[i][1]));
+    const last = route[route.length - 1];
+    points.push(await cellPoint(last[0], last[1]));
+    await mouseDrag(points);
+    const turn = await value(`(() => {
+      const status = document.getElementById("maze-status").textContent;
+      return { steps: Number(document.getElementById("maze-view").dataset.steps), status };
+    })()`);
+    const turnOk = turn.steps === route.length && turn.status.includes("You reached the exit.") && !turn.status.includes("blocked");
+    const turnRow = `maze u-turn ${seed} ${turnOk} ${turn.steps}/${route.length}`;
+    lines.push(turnRow);
+    console.log(turnRow);
+    if (!turnOk) problems.push({ seed, turn });
+  }
 } finally {
   ws.close();
   chrome.kill();

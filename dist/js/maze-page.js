@@ -132,7 +132,13 @@ export function mount(doc) {
     path.reverse();
     return path;
   }
-  function extend(cell) {
+  function cellPixels() {
+    if (!view.getBoundingClientRect || !view.width) return CELL;
+    const rect = view.getBoundingClientRect();
+    if (!rect.width) return CELL;
+    return CELL * (rect.width / view.width);
+  }
+  function extend(cell, travel = 0) {
     if (!cell) return;
     if (!player.length) {
       if (cell[0] === 0 && cell[1] === 0) {
@@ -148,28 +154,36 @@ export function mount(doc) {
     }
     const last = player[player.length - 1];
     const hop = Math.abs(cell[0] - last[0]) + Math.abs(cell[1] - last[1]);
-    if (hop === 1) {
+    const jumped = travel > cellPixels() * 0.75;
+    if (hop === 1 && !jumped) {
       const open = neighbors(maze, last[0], last[1]).some(([x, y]) => x === cell[0] && y === cell[1]);
       if (open) player.push(cell);
       else say("That cell is blocked by a wall. Stay on the open path.");
       return;
     }
     const path = bridge(last, cell);
-    if (!path) return;
+    if (!path) {
+      if (hop === 1) say("That cell is blocked by a wall. Stay on the open path.");
+      return;
+    }
     for (const next of path) {
       const back = player.findIndex(([x, y]) => x === next[0] && y === next[1]);
       if (back >= 0) player = player.slice(0, back + 1);
       else player.push(next);
     }
   }
+  let lastPointer = null;
   function down(x, y) {
     drawing = true;
-    extend(cellAt(x, y));
+    extend(cellAt(x, y), 0);
+    lastPointer = { x, y };
     redrawPlay();
   }
   function move(x, y) {
     if (!drawing) return;
-    extend(cellAt(x, y));
+    const travel = lastPointer ? Math.hypot(x - lastPointer.x, y - lastPointer.y) : cellPixels() * 2;
+    lastPointer = { x, y };
+    extend(cellAt(x, y), travel);
     redrawPlay();
   }
   view.addEventListener("mousedown", (event) => {
@@ -184,6 +198,7 @@ export function mount(doc) {
   });
   root.addEventListener("mouseup", () => {
     drawing = false;
+    lastPointer = null;
   });
   let gesture = null;
   function rememberGesture(x, y) {
@@ -191,6 +206,8 @@ export function mount(doc) {
       snapshot: player.map(([cx, cy]) => [cx, cy]),
       message: status.textContent,
       cell: cellAt(x, y),
+      x,
+      y,
       committed: false,
       timer: 0,
     };
@@ -218,10 +235,12 @@ export function mount(doc) {
     if (!gesture.committed) {
       gesture.committed = true;
       drawing = true;
-      extend(gesture.cell);
+      extend(gesture.cell, 0);
     }
     drawing = true;
-    extend(cellAt(x, y));
+    extend(cellAt(x, y), Math.hypot(x - gesture.x, y - gesture.y));
+    gesture.x = x;
+    gesture.y = y;
     redrawPlay();
   }
   view.addEventListener("touchstart", (event) => {
@@ -266,7 +285,7 @@ export function mount(doc) {
       clearTimeout(gesture.timer);
       gesture.committed = true;
       drawing = true;
-      extend(gesture.cell);
+      extend(gesture.cell, 0);
       redrawPlay();
     }
     gesture = null;
