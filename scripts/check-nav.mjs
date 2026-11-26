@@ -367,6 +367,84 @@ try {
   console.log(wordPlay);
   if (!playReady || !catFound || !dogFound) problems.push({ wordPlay, cat: !!cat, dog: !!dog });
 
+  async function zebraCorners() {
+    return value(`(() => {
+      document.querySelector("#ws-puzzle").scrollIntoView({ block: "center" });
+      const box = (x, y) => document.querySelector('#ws-puzzle [data-x="' + x + '"][data-y="' + y + '"]').getBoundingClientRect();
+      const start = box(2, 8);
+      const end = box(6, 4);
+      const off = box(3, 8);
+      const off2 = box(4, 7);
+      return [
+        { x: start.left + start.width / 2, y: start.top + start.height / 2 },
+        { x: off.left + off.width / 2, y: off.top + 1 },
+        { x: off2.left + 1, y: off2.top + off2.height / 2 },
+        { x: end.left + end.width / 2, y: end.top + end.height / 2 },
+      ];
+    })()`);
+  }
+  async function loadZebra() {
+    await go("/word-search-generator/");
+    return value(`new Promise((resolve) => {
+      const start = Date.now();
+      const tick = () => {
+        document.getElementById("btn-example").click();
+        const z = document.querySelector('#ws-puzzle [data-x="2"][data-y="8"]');
+        if (z && z.textContent === "Z") resolve(true);
+        else if (Date.now() - start > 5000) resolve(false);
+        else setTimeout(tick, 120);
+      };
+      tick();
+    })`);
+  }
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+  const zebraReady = await loadZebra();
+  const zebraMouse = zebraReady ? await zebraCorners() : null;
+  if (zebraMouse) await mouseDrag(zebraMouse);
+  const zebraMouseFound = await value(`document.querySelector('#ws-list [data-letters="ZEBRA"]')?.classList.contains("found-word") === true`);
+  const zebraTouchReady = await loadZebra();
+  const zebraTouch = zebraTouchReady ? await zebraCorners() : null;
+  if (zebraTouch) await touchDrag(zebraTouch);
+  const zebraTouchFound = await value(`document.querySelector('#ws-list [data-letters="ZEBRA"]')?.classList.contains("found-word") === true`);
+  const zebraRow = `word search diagonal mouse ${zebraMouseFound} touch ${zebraTouchFound}`;
+  lines.push(zebraRow);
+  console.log(zebraRow);
+  if (!zebraMouseFound || !zebraTouchFound) problems.push({ zebraRow, zebraReady, zebraTouchReady });
+
+  await go("/cryptogram-solver/");
+  const cryptoClear = await value(`new Promise((resolve) => {
+    const start = Date.now();
+    let started = false;
+    const tick = () => {
+      const text = document.getElementById("crypto-text");
+      const button = document.getElementById("btn-solve");
+      const results = document.getElementById("crypto-results");
+      if (!text || !button || !results) {
+        if (Date.now() - start > 8000) resolve(false);
+        else setTimeout(tick, 80);
+        return;
+      }
+      if (results.textContent.includes("THIS IS A TEST")) {
+        document.getElementById("btn-example").click();
+        const after = document.getElementById("crypto-results").textContent;
+        resolve(document.getElementById("crypto-text").value.startsWith("YGXK") && !after.includes("THIS IS A TEST"));
+        return;
+      }
+      if (!started) {
+        text.value = "GSRH RH Z GVHG";
+        button.click();
+        started = true;
+      }
+      if (Date.now() - start > 8000) resolve(false);
+      else setTimeout(tick, 200);
+    };
+    tick();
+  })`);
+  const cryptoRow = `cryptogram try example clears ${cryptoClear}`;
+  lines.push(cryptoRow);
+  console.log(cryptoRow);
+  if (!cryptoClear) problems.push({ cryptoClear });
+
   await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
   await go("/maze-generator/");
   await value(`new Promise((resolve) => {

@@ -9,7 +9,7 @@ export function buildPdf(pages) {
     objects.push(body);
     return objects.length;
   };
-  const fontId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  const fontId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
   const pageIds = [];
   for (const page of pages) {
     const stream = page.stream;
@@ -39,7 +39,11 @@ export function buildPdf(pages) {
 }
 
 function escapePdf(text) {
-  return String(text).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  return String(text)
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)")
+    .replace(/\u00d7/g, "\\327");
 }
 
 export function textPage({ title, lines, width = 612, height = 792 }) {

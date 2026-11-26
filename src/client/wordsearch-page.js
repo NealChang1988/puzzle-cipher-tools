@@ -45,6 +45,7 @@ export function mount(doc) {
   let puzzle = null;
   let show = false;
   let drag = [];
+  let dragStart = null;
   let drawing = false;
   let ignoreMouse = 0;
   const foundWords = new Set();
@@ -123,6 +124,7 @@ export function mount(doc) {
     foundWords.clear();
     foundCells.clear();
     drag = [];
+    dragStart = null;
     renderGrid(puzzleBox, false);
     renderGrid(answerBox, true);
     renderList();
@@ -140,6 +142,24 @@ export function mount(doc) {
   function lettersOf(cells) {
     return cells.map(([x, y]) => puzzle.grid[y][x]).join("");
   }
+  function lineBetween(start, current) {
+    const dx = current[0] - start[0];
+    const dy = current[1] - start[1];
+    const len = Math.max(Math.abs(dx), Math.abs(dy));
+    if (!len) return [[start[0], start[1]]];
+    const snapped = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+    const sx = Math.round(Math.cos(snapped));
+    const sy = Math.round(Math.sin(snapped));
+    const side = puzzle.grid.length;
+    const cells = [];
+    for (let i = 0; i <= len; i++) {
+      const x = start[0] + sx * i;
+      const y = start[1] + sy * i;
+      if (x < 0 || y < 0 || x >= side || y >= side) break;
+      cells.push([x, y]);
+    }
+    return cells;
+  }
   function finishDrag() {
     drawing = false;
     const word = lettersOf(drag);
@@ -153,13 +173,7 @@ export function mount(doc) {
       renderList();
     }
     drag = [];
-    paintPlay();
-  }
-  function addCell(cell) {
-    if (!cell) return;
-    const last = drag[drag.length - 1];
-    if (last && last[0] === cell[0] && last[1] === cell[1]) return;
-    drag.push(cell);
+    dragStart = null;
     paintPlay();
   }
   function cellFromPoint(x, y) {
@@ -168,20 +182,34 @@ export function mount(doc) {
     if (!span || !puzzleBox.contains?.(span)) return null;
     return [Number(span.dataset.x), Number(span.dataset.y)];
   }
+  function setLine(x, y) {
+    if (!dragStart) return;
+    const cell = cellFromPoint(x, y);
+    if (!cell) return;
+    drag = lineBetween(dragStart, cell);
+    paintPlay();
+  }
+  function beginDrag(x, y) {
+    const cell = cellFromPoint(x, y);
+    drawing = true;
+    dragStart = cell;
+    drag = cell ? [cell] : [];
+    paintPlay();
+  }
   puzzleBox.addEventListener("mousedown", (event) => {
     if (Date.now() < ignoreMouse || event.button !== 0 || !puzzle) return;
     event.preventDefault?.();
-    drawing = true;
-    drag = [];
-    addCell(cellFromPoint(event.clientX, event.clientY));
+    beginDrag(event.clientX, event.clientY);
   });
   const root = doc.body?.addEventListener ? doc.body : doc;
   root.addEventListener("mousemove", (event) => {
     if (!drawing || Date.now() < ignoreMouse) return;
-    addCell(cellFromPoint(event.clientX, event.clientY));
+    setLine(event.clientX, event.clientY);
   });
-  root.addEventListener("mouseup", () => {
-    if (drawing) finishDrag();
+  root.addEventListener("mouseup", (event) => {
+    if (!drawing) return;
+    if (event?.clientX != null) setLine(event.clientX, event.clientY);
+    finishDrag();
   });
   puzzleBox.addEventListener("touchstart", (event) => {
     if (!puzzle) return;
@@ -189,18 +217,18 @@ export function mount(doc) {
     const touch = event.changedTouches?.[0] || event.touches?.[0];
     if (!touch) return;
     event.preventDefault?.();
-    drawing = true;
-    drag = [];
-    addCell(cellFromPoint(touch.clientX, touch.clientY));
+    beginDrag(touch.clientX, touch.clientY);
   });
   puzzleBox.addEventListener("touchmove", (event) => {
     const touch = event.changedTouches?.[0] || event.touches?.[0];
     if (!touch) return;
     event.preventDefault?.();
-    addCell(cellFromPoint(touch.clientX, touch.clientY));
+    setLine(touch.clientX, touch.clientY);
   });
   puzzleBox.addEventListener("touchend", (event) => {
     ignoreMouse = Date.now() + 1000;
+    const touch = event.changedTouches?.[0];
+    if (touch) setLine(touch.clientX, touch.clientY);
     if (drawing) finishDrag();
     event.preventDefault?.();
   });
