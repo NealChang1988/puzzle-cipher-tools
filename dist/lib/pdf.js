@@ -38,12 +38,85 @@ export function buildPdf(pages) {
   return pdf;
 }
 
+function winAnsiByte(ch) {
+  const code = ch.codePointAt(0);
+  if (code <= 0x7e) return code;
+  if (code >= 0xa0 && code <= 0xff) return code;
+  return null;
+}
+
+export function needsTitleImage(text) {
+  return [...String(text)].some((ch) => ch !== "\n" && winAnsiByte(ch) == null);
+}
+
 function escapePdf(text) {
-  return String(text)
-    .replace(/\\/g, "\\\\")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)")
-    .replace(/\u00d7/g, "\\327");
+  let out = "";
+  for (const ch of String(text)) {
+    if (ch === "\\") {
+      out += "\\\\";
+      continue;
+    }
+    if (ch === "(") {
+      out += "\\(";
+      continue;
+    }
+    if (ch === ")") {
+      out += "\\)";
+      continue;
+    }
+    const byte = winAnsiByte(ch);
+    if (byte == null) continue;
+    out += byte > 0x7e ? `\\${byte.toString(8).padStart(3, "0")}` : ch;
+  }
+  return out;
+}
+
+export function titleImage(text) {
+  if (!needsTitleImage(text) || typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const font = "24px 'WenQuanYi Micro Hei', 'Droid Sans Fallback', sans-serif";
+  ctx.font = font;
+  const width = Math.min(520, Math.ceil(ctx.measureText(text).width) + 8);
+  const height = 32;
+  canvas.width = width;
+  canvas.height = height;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#111111";
+  ctx.font = font;
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 4, height / 2);
+  const data = ctx.getImageData(0, 0, width, height).data;
+  let hex = "";
+  for (let i = 0; i < data.length; i += 4) {
+    hex += data[i].toString(16).padStart(2, "0");
+    hex += data[i + 1].toString(16).padStart(2, "0");
+    hex += data[i + 2].toString(16).padStart(2, "0");
+  }
+  return { width, height, hex: `${hex}>` };
+}
+
+function drawTitle(commands, title, image, x, baseline) {
+  if (image?.hex) {
+    const maxW = 380;
+    const scale = Math.min(1, maxW / image.width);
+    const w = (image.width * scale).toFixed(2);
+    const h = (image.height * scale).toFixed(2);
+    const y = baseline - image.height * scale;
+    commands.push(
+      "q",
+      `${w} 0 0 ${h} ${x} ${y.toFixed(2)} cm`,
+      "BI",
+      `/W ${image.width} /H ${image.height} /CS /RGB /BPC 8 /F /AHx`,
+      "ID",
+      image.hex,
+      "EI",
+      "Q",
+    );
+    return;
+  }
+  commands.push("BT", "/F1 16 Tf", `${x} ${baseline - 4} Td`, `(${escapePdf(title)}) Tj`, "ET");
 }
 
 export function textPage({ title, lines, width = 612, height = 792 }) {
@@ -59,7 +132,7 @@ export function textPage({ title, lines, width = 612, height = 792 }) {
   return { width, height, stream: commands.join("\n") };
 }
 
-export function mazePdf(maze, { title = "Maze", size = "", showSolution = false } = {}) {
+export function mazePdf(maze, { title = "Maze", size = "", showSolution = false, image = null } = {}) {
   const width = 612;
   const height = 792;
   const margin = 48;
@@ -67,7 +140,7 @@ export function mazePdf(maze, { title = "Maze", size = "", showSolution = false 
   const ox = margin;
   const oy = margin;
   const commands = ["1 w", "0 0 0 RG"];
-  commands.push("BT", "/F1 16 Tf", `48 ${height - 36} Td`, `(${escapePdf(title)}) Tj`, "ET");
+  drawTitle(commands, title, image, 48, height - 32);
   if (size) commands.push("BT", "/F1 16 Tf", `${width - 148} ${height - 36} Td`, `(${escapePdf(size)}) Tj`, "ET");
   const top = oy + maze.height * cell;
   for (let y = 0; y < maze.height; y++) {
@@ -93,16 +166,16 @@ export function mazePdf(maze, { title = "Maze", size = "", showSolution = false 
   return { width, height, stream: commands.join("\n") };
 }
 
-export function mazeDocument(maze, title = "") {
+export function mazeDocument(maze, title = "", image = null) {
   const name = String(title || "").trim() || "Maze";
   const size = `${maze.width} \u00d7 ${maze.height}`;
   return buildPdf([
-    mazePdf(maze, { title: name, size, showSolution: false }),
+    mazePdf(maze, { title: name, size, showSolution: false, image: image || titleImage(name) }),
     mazePdf(maze, { title: "Answer", showSolution: true }),
   ]);
 }
 
-export function wordSearchPdf(puzzle, { title = "Word search", answer = false } = {}) {
+export function wordSearchPdf(puzzle, { title = "Word search", answer = false, image = null } = {}) {
   const width = 612;
   const height = 792;
   const side = puzzle.grid.length;
@@ -113,15 +186,9 @@ export function wordSearchPdf(puzzle, { title = "Word search", answer = false } 
   const ox = (width - side * cell) / 2;
   const gridTop = height - 64;
   const fontSize = Math.max(12, Math.round(cell * 0.55));
-  const commands = [
-    "0 0 0 RG",
-    "0 0 0 rg",
-    "BT",
-    "/F1 16 Tf",
-    `48 ${height - 40} Td`,
-    `(${escapePdf(answer ? `${title} answer` : title || "Word search")}) Tj`,
-    "ET",
-  ];
+  const heading = answer ? `${title || "Word search"} answer` : title || "Word search";
+  const commands = ["0 0 0 RG", "0 0 0 rg"];
+  drawTitle(commands, heading, image, 48, height - 28);
   for (let y = 0; y < side; y++) {
     for (let x = 0; x < side; x++) {
       const x0 = ox + x * cell;
@@ -164,8 +231,9 @@ export function wordSearchPdf(puzzle, { title = "Word search", answer = false } 
 }
 
 export function wordSearchDocument(puzzle, title) {
+  const image = titleImage(title || "");
   return buildPdf([
-    wordSearchPdf(puzzle, { title, answer: false }),
-    wordSearchPdf(puzzle, { title, answer: true }),
+    wordSearchPdf(puzzle, { title, answer: false, image }),
+    wordSearchPdf(puzzle, { title, answer: true, image }),
   ]);
 }

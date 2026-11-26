@@ -357,6 +357,22 @@ try {
   const cat = await value(wordCenters.replace("word", JSON.stringify("CAT")));
   if (cat) await mouseDrag(cat);
   const catFound = await value(`document.querySelector('#ws-list [data-letters="CAT"]')?.classList.contains("found-word") === true`);
+  const foundMsg = await value(`document.getElementById("ws-status").textContent`);
+  await send("Emulation.setEmulatedMedia", { media: "print" }, sessionId);
+  const printClean = await value(`(() => {
+    const word = document.querySelector("#ws-list .found-word");
+    const cell = document.querySelector("#ws-puzzle .circled");
+    return {
+      strike: word ? getComputedStyle(word).textDecorationLine : "",
+      shadow: cell ? getComputedStyle(cell).boxShadow : "missing",
+    };
+  })()`);
+  await send("Emulation.setEmulatedMedia", { media: "screen" }, sessionId);
+  if (!/Found CAT/.test(foundMsg) || printClean.strike === "line-through" || printClean.shadow.includes("rgb")) {
+    problems.push({ foundMsg, printClean });
+  }
+  lines.push(`word feedback ${/Found CAT/.test(foundMsg)} print clean ${printClean.strike !== "line-through"}`);
+  console.log(`word feedback ${foundMsg} print ${printClean.strike} ${printClean.shadow}`);
   await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
   await new Promise((resolve) => setTimeout(resolve, 200));
   const dog = await value(wordCenters.replace("word", JSON.stringify("DOG")));
@@ -478,6 +494,20 @@ try {
   }));
   await mouseDrag(mazePoints);
   const mazeExit = await value(`document.getElementById("maze-status").textContent.includes("You reached the exit.")`);
+  const cleanPrint = await value(`(() => {
+    window.dispatchEvent(new Event("beforeprint"));
+    const canvas = document.getElementById("maze-view");
+    const data = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+    let green = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i] < 40 && data[i + 1] > 70 && data[i + 1] < 130 && data[i + 2] > 50 && data[i + 2] < 120) green += 1;
+    }
+    window.dispatchEvent(new Event("afterprint"));
+    return green;
+  })()`);
+  if (cleanPrint !== 0) problems.push({ cleanPrint });
+  lines.push(`maze print clean ${cleanPrint === 0}`);
+  console.log(`maze print clean ${cleanPrint === 0}`);
   await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
   await new Promise((resolve) => setTimeout(resolve, 200));
   await value(`document.getElementById("maze-view").scrollIntoView({ block: "center" })`);
@@ -535,11 +565,36 @@ try {
     };
     tick();
   })`);
-  const seedOk = seeds && seeds.after !== seeds.before && seeds.kept === "4242" && seeds.status.includes("40 by 40") && seeds.status.includes("4242");
+  const fresh = await value(`new Promise((resolve) => {
+    const seed = document.getElementById("maze-seed");
+    const stuck = seed.value;
+    document.getElementById("btn-new").click();
+    const start = Date.now();
+    const tick = () => {
+      if (seed.value !== stuck) {
+        const afterNew = seed.value;
+        document.getElementById("preset-easy").click();
+        resolve(seed.value !== afterNew);
+      } else if (Date.now() - start > 3000) resolve(false);
+      else setTimeout(tick, 40);
+    };
+    tick();
+  })`);
+  const seedOk = seeds && seeds.after !== seeds.before && seeds.kept === "4242" && seeds.status.includes("40 by 40") && seeds.status.includes("4242") && fresh;
   const seedRow = `maze seeds ${seedOk}`;
   lines.push(seedRow);
   console.log(seedRow);
-  if (!seedOk) problems.push({ seeds });
+  if (!seedOk) problems.push({ seeds, fresh });
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  const phoneMaze = await value(`(() => {
+    document.getElementById("preset-hard").click();
+    const canvas = document.getElementById("maze-view");
+    const box = canvas.getBoundingClientRect();
+    return { width: Math.round(box.width), page: document.documentElement.scrollHeight > 0 };
+  })()`);
+  lines.push(`maze phone width ${phoneMaze.width}`);
+  console.log(`maze phone width ${phoneMaze.width}`);
+  if (!phoneMaze || phoneMaze.width < 1000) problems.push({ phoneMaze });
 
   await go("/word-search-generator/");
   const wsSeed = await value(`new Promise((resolve) => {
@@ -606,6 +661,137 @@ try {
   lines.push(printRow);
   console.log(printRow);
   if (!printOk) problems.push({ wsPrint, mazePrint });
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  await go("/maze-generator/");
+  await value(`new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      if (!document.getElementById("maze-status").textContent.includes("seed")) {
+        if (Date.now() - start > 5000) resolve(false);
+        else setTimeout(tick, 50);
+        return;
+      }
+      document.getElementById("maze-width").value = "40";
+      document.getElementById("maze-height").value = "40";
+      document.getElementById("maze-seed").value = "403481";
+      document.getElementById("maze-seed").dispatchEvent(new Event("change", { bubbles: true }));
+      resolve(true);
+    };
+    tick();
+  })`);
+  const big = generateMaze(40, 40, 403481).solution;
+  async function cellPoint(x, y) {
+    return value(`(() => {
+      const canvas = document.getElementById("maze-view");
+      const board = document.getElementById("maze-board");
+      board.scrollIntoView({ block: "start" });
+      const pad = 10;
+      const cell = 18;
+      const scale = canvas.getBoundingClientRect().width / canvas.width;
+      const px = (pad + (${x} + 0.5) * cell) * scale;
+      const py = (pad + (${y} + 0.5) * cell) * scale;
+      board.scrollLeft = Math.max(0, px - 40);
+      board.scrollTop = Math.max(0, py - 40);
+      const box = canvas.getBoundingClientRect();
+      return {
+        x: box.left + (pad + (${x} + 0.5) * cell) * (box.width / canvas.width),
+        y: box.top + (pad + (${y} + 0.5) * cell) * (box.height / canvas.height),
+      };
+    })()`);
+  }
+  async function swipe(from, to) {
+    const start = await cellPoint(from[0], from[1]);
+    await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: start.x, y: start.y, id: 1 }] }, sessionId);
+    const end = await cellPoint(to[0], to[1]);
+    await send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: end.x, y: end.y, id: 1 }] }, sessionId);
+    await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }, sessionId);
+  }
+  async function panOn(cell) {
+    const finger = await cellPoint(cell[0], cell[1]);
+    const second = { x: finger.x + 28, y: finger.y + 18 };
+    await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: finger.x, y: finger.y, id: 1 }] }, sessionId);
+    await send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [
+        { x: finger.x, y: finger.y, id: 1 },
+        { x: second.x, y: second.y, id: 2 },
+      ],
+    }, sessionId);
+    await send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [
+        { x: finger.x - 24, y: finger.y - 12, id: 1 },
+        { x: second.x - 24, y: second.y - 12, id: 2 },
+      ],
+    }, sessionId);
+    await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }, sessionId);
+  }
+  await swipe(big[0], big[9]);
+  const swiped = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+  const beforePan = await value(`document.getElementById("maze-status").textContent`);
+  await panOn(big[4]);
+  const afterPan = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+  const panStatus = await value(`document.getElementById("maze-status").textContent`);
+  let cursor = 9;
+  let pans = 1;
+  let panKept = true;
+  while (cursor < big.length - 1) {
+    const next = Math.min(cursor + 12, big.length - 1);
+    await swipe(big[cursor], big[next]);
+    cursor = next;
+    if (pans < 4) {
+      const before = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+      await panOn(big[4]);
+      const after = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+      if (after !== before) panKept = false;
+      pans += 1;
+    }
+  }
+  const ended = await value(`document.getElementById("maze-status").textContent.includes("You reached the exit.")`);
+  const full = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+  const panOk = swiped === 10 && afterPan === 10 && panKept && panStatus === beforePan && !panStatus.includes("blocked") && ended && full === big.length && pans === 4;
+  const panRow = `maze pan ${panOk} swipe ${swiped} kept ${afterPan} end ${full}/${big.length} pans ${pans}`;
+  lines.push(panRow);
+  console.log(panRow);
+  if (!panOk) problems.push({ panRow, beforePan, panStatus, ended });
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+  const turnSeeds = [586791, 912292, 431932, 868627, 747330];
+  for (const seed of turnSeeds) {
+    await go("/maze-generator/");
+    await value(`new Promise((resolve) => {
+      const start = Date.now();
+      const tick = () => {
+        if (!document.getElementById("maze-status").textContent.includes("seed")) {
+          if (Date.now() - start > 5000) resolve(false);
+          else setTimeout(tick, 50);
+          return;
+        }
+        document.getElementById("maze-width").value = "10";
+        document.getElementById("maze-height").value = "10";
+        document.getElementById("maze-seed").value = "${seed}";
+        document.getElementById("maze-seed").dispatchEvent(new Event("change", { bubbles: true }));
+        resolve(true);
+      };
+      tick();
+    })`);
+    const route = generateMaze(10, 10, seed).solution;
+    const points = [];
+    for (let i = 0; i < route.length; i += 3) points.push(await cellPoint(route[i][0], route[i][1]));
+    const last = route[route.length - 1];
+    points.push(await cellPoint(last[0], last[1]));
+    await mouseDrag(points);
+    const turn = await value(`(() => {
+      const status = document.getElementById("maze-status").textContent;
+      return { steps: Number(document.getElementById("maze-view").dataset.steps), status };
+    })()`);
+    const turnOk = turn.steps === route.length && turn.status.includes("You reached the exit.") && !turn.status.includes("blocked");
+    const turnRow = `maze u-turn ${seed} ${turnOk} ${turn.steps}/${route.length}`;
+    lines.push(turnRow);
+    console.log(turnRow);
+    if (!turnOk) problems.push({ seed, turn });
+  }
 } finally {
   ws.close();
   chrome.kill();

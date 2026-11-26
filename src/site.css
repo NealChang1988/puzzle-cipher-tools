@@ -364,7 +364,12 @@ input[type="range"] { width: min(100%, 180px); }
 .paste-head .btn { flex: 1 1 auto; justify-content: center; }
 .print-title { display: none; }
 .found-word { text-decoration: line-through; color: var(--muted); }
+.maze-board { max-width: 100%; }
 .maze-canvas, .letter-grid { width: min(100%, 420px); max-width: 100%; height: auto; background: #fff; touch-action: none; user-select: none; }
+@media (max-width: 799px) {
+  .maze-board { overflow: auto; max-height: 70vh; }
+  .maze-board .maze-canvas { width: max(100%, calc(var(--cols, 10) * 28px)); max-width: none; }
+}
 .letter-grid { display: grid; gap: 1px; }
 .letter-grid span {
   display: grid;
@@ -395,7 +400,11 @@ input[type="range"] { width: min(100%, 180px); }
     break-before: page !important;
     page-break-before: always !important;
   }
-  .letter-grid span.hit, .letter-grid span.circled { box-shadow: inset 0 0 0 2px #000; }
+  #ws-answer .letter-grid span.hit { box-shadow: inset 0 0 0 2px #000; }
+  #ws-puzzle span.circled, #ws-puzzle span.drag { box-shadow: none !important; background: #fff !important; border-radius: 0 !important; }
+  .found-word { text-decoration: none !important; color: inherit !important; }
+  .maze-board { overflow: visible !important; max-height: none !important; }
+  .maze-board .maze-canvas { width: 100% !important; max-width: 100% !important; }
   .print-title:not([hidden]) {
     display: block !important;
     font: 700 1.7rem Georgia, "Iowan Old Style", Palatino, serif;

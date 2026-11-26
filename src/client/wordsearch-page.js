@@ -171,7 +171,9 @@ export function mount(doc) {
       foundWords.add(hit.letters);
       for (const [x, y] of drag) foundCells.add(`${x},${y}`);
       renderList();
-    }
+      const left = puzzle.placed.length - foundWords.size;
+      say(left ? `Found ${hit.letters} \u2014 ${left} left` : "You found them all!");
+    } else if (drag.length > 1) say("That is not one of the words.");
     drag = [];
     dragStart = null;
     paintPlay();
