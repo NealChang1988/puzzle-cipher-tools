@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://puzzle-cipher-tools.example/sitemap.xml
+Sitemap: https://puzzleandcipher.com/sitemap.xml

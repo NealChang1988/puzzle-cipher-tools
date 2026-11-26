@@ -7,7 +7,10 @@ import { headersFile, renderSite, robotsTxt, sitemapXml, symbolsCss } from "../s
 const root = fileURLToPath(new URL("..", import.meta.url));
 
 export function loadConfig() {
-  return JSON.parse(readFileSync(join(root, "site.config.json"), "utf8"));
+  const config = JSON.parse(readFileSync(join(root, "site.config.json"), "utf8"));
+  const siteUrl = (process.env.SITE_URL || "").trim().replace(/\/+$/, "");
+  if (siteUrl) config.canonicalOrigin = siteUrl;
+  return config;
 }
 
 export function build({ distDir, noindex = false, config = loadConfig() } = {}) {
