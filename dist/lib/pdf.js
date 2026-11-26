@@ -9,7 +9,7 @@ export function buildPdf(pages) {
     objects.push(body);
     return objects.length;
   };
-  const fontId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  const fontId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
   const pageIds = [];
   for (const page of pages) {
     const stream = page.stream;
@@ -39,7 +39,11 @@ export function buildPdf(pages) {
 }
 
 function escapePdf(text) {
-  return String(text).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  return String(text)
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)")
+    .replace(/\u00d7/g, "\\327");
 }
 
 export function textPage({ title, lines, width = 612, height = 792 }) {
@@ -55,7 +59,7 @@ export function textPage({ title, lines, width = 612, height = 792 }) {
   return { width, height, stream: commands.join("\n") };
 }
 
-export function mazePdf(maze, { title = "Maze", showSolution = false } = {}) {
+export function mazePdf(maze, { title = "Maze", size = "", showSolution = false } = {}) {
   const width = 612;
   const height = 792;
   const margin = 48;
@@ -64,6 +68,7 @@ export function mazePdf(maze, { title = "Maze", showSolution = false } = {}) {
   const oy = margin;
   const commands = ["1 w", "0 0 0 RG"];
   commands.push("BT", "/F1 16 Tf", `48 ${height - 36} Td`, `(${escapePdf(title)}) Tj`, "ET");
+  if (size) commands.push("BT", "/F1 16 Tf", `${width - 148} ${height - 36} Td`, `(${escapePdf(size)}) Tj`, "ET");
   const top = oy + maze.height * cell;
   for (let y = 0; y < maze.height; y++) {
     for (let x = 0; x < maze.width; x++) {
@@ -88,9 +93,11 @@ export function mazePdf(maze, { title = "Maze", showSolution = false } = {}) {
   return { width, height, stream: commands.join("\n") };
 }
 
-export function mazeDocument(maze) {
+export function mazeDocument(maze, title = "") {
+  const name = String(title || "").trim() || "Maze";
+  const size = `${maze.width} \u00d7 ${maze.height}`;
   return buildPdf([
-    mazePdf(maze, { title: `Maze ${maze.width}x${maze.height}`, showSolution: false }),
+    mazePdf(maze, { title: name, size, showSolution: false }),
     mazePdf(maze, { title: "Answer", showSolution: true }),
   ]);
 }

@@ -44,6 +44,8 @@ export function mazeBody() {
   ${WHERE}
   <section class="tool" aria-label="Maze Generator">
     <div class="controls">
+      <label for="maze-title">Title, optional</label>
+      <input id="maze-title" type="text" autocomplete="off">
       <div class="actions">
         <button type="button" class="btn" id="preset-easy"><span class="btn-label">Easy</span></button>
         <button type="button" class="btn" id="preset-medium"><span class="btn-label">Medium</span></button>
@@ -115,6 +117,7 @@ export function wordSearchBody() {
       <input id="ws-title" type="text" autocomplete="off">
       <label for="ws-words">Words</label>
       <textarea id="ws-words" rows="3" spellcheck="false" placeholder="One word on each line, or separated by commas"></textarea>
+      ${button("btn-example", "Try example", "pencil")}
     </div>
     <p id="ws-status" class="status" role="status"></p>
     <div id="ws-puzzle" class="sheet">Your word search will show up here.</div>
@@ -165,6 +168,7 @@ export function cryptogramBody() {
   <section class="tool" aria-label="Cryptogram Solver">
     <label for="crypto-text">Coded text</label>
     <textarea id="crypto-text" rows="4" spellcheck="false" autocomplete="off"></textarea>
+    ${button("btn-example", "Try example", "pencil")}
     <label for="crypto-known">Known letters, optional</label>
     <input id="crypto-known" type="text" autocomplete="off" placeholder="Q=A">
     <label class="choices"><input type="checkbox" id="crypto-self" checked> A letter is never itself</label>
@@ -210,6 +214,7 @@ export function crosswordBody() {
   <section class="tool" aria-label="Crossword Solver">
     <label for="cross-pattern">Pattern</label>
     <input id="cross-pattern" type="text" autocomplete="off" spellcheck="false" placeholder="C?T">
+    ${button("btn-example", "Try example", "pencil")}
     <label>Length <select id="cross-length">${options}</select></label>
     <div id="cross-boxes" class="boxes" aria-label="Letter boxes"></div>
     <div class="actions">

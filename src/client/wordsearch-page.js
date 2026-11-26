@@ -1,6 +1,23 @@
 import { wordSearchDocument } from "../lib/pdf.js";
 import { generateWordSearch } from "../lib/wordsearch.js";
-import { downloadBlob, slugName, withBusy } from "./ui.js";
+import { downloadBlob, slugName, syncPrintTitle, withBusy } from "./ui.js";
+
+const SAMPLE = "cat, dog, elephant, zebra, lion, hippo, ice cream, T-Rex";
+
+function freshSeed() {
+  return String((((Date.now() ^ ((Math.random() * 1e6) | 0)) >>> 0) % 1000000) || 1);
+}
+
+function straight(cells) {
+  if (cells.length < 2) return false;
+  const dx = Math.sign(cells[1][0] - cells[0][0]);
+  const dy = Math.sign(cells[1][1] - cells[0][1]);
+  if (!dx && !dy) return false;
+  for (let i = 1; i < cells.length; i++) {
+    if (cells[i][0] - cells[i - 1][0] !== dx || cells[i][1] - cells[i - 1][1] !== dy) return false;
+  }
+  return true;
+}
 
 export const REQUIRED_IDS = [
   "ws-words",
@@ -24,9 +41,15 @@ export function mount(doc) {
   const puzzleBox = doc.getElementById("ws-puzzle");
   const answerBox = doc.getElementById("ws-answer");
   const list = doc.getElementById("ws-list");
+  const titleInput = doc.getElementById("ws-title");
   let puzzle = null;
   let show = false;
-  let seedEdited = false;
+  let drag = [];
+  let dragStart = null;
+  let drawing = false;
+  let ignoreMouse = 0;
+  const foundWords = new Set();
+  const foundCells = new Set();
 
   function directions() {
     return ["E", "S", "SE", "NE", "W", "N", "NW", "SW"].filter((name) => doc.getElementById(`dir-${name}`).checked);
@@ -55,6 +78,8 @@ export function mount(doc) {
       row.forEach((letter, x) => {
         const cell = doc.createElement("span");
         cell.textContent = letter;
+        cell.dataset.x = String(x);
+        cell.dataset.y = String(y);
         if (marks.has(`${x},${y}`)) cell.className = "hit";
         table.append(cell);
       });
@@ -65,7 +90,14 @@ export function mount(doc) {
     list.replaceChildren();
     if (!puzzle) return;
     const words = doc.createElement("p");
-    words.textContent = puzzle.placed.map((item) => item.original).join(", ");
+    puzzle.placed.forEach((item, index) => {
+      if (index) words.append(", ");
+      const span = doc.createElement("span");
+      span.textContent = item.original;
+      span.dataset.letters = item.letters;
+      if (foundWords.has(item.letters)) span.className = "found-word";
+      words.append(span);
+    });
     list.append(words);
     if (puzzle.skipped?.length) {
       for (const item of puzzle.skipped) {
@@ -89,6 +121,10 @@ export function mount(doc) {
       return;
     }
     puzzle = made;
+    foundWords.clear();
+    foundCells.clear();
+    drag = [];
+    dragStart = null;
     renderGrid(puzzleBox, false);
     renderGrid(answerBox, true);
     renderList();
@@ -96,15 +132,122 @@ export function mount(doc) {
     say(`Made a ${puzzle.size} by ${puzzle.size} puzzle, seed ${puzzle.seed}.${skipped}`);
   }
 
-  const seedBox = doc.getElementById("ws-seed");
-  seedBox.addEventListener("input", () => {
-    seedEdited = true;
+  function paintPlay() {
+    puzzleBox.querySelectorAll("[data-x]").forEach((span) => {
+      const key = `${span.dataset.x},${span.dataset.y}`;
+      const onDrag = drag.some(([x, y]) => `${x},${y}` === key);
+      span.className = foundCells.has(key) ? "circled" : onDrag ? "drag" : "";
+    });
+  }
+  function lettersOf(cells) {
+    return cells.map(([x, y]) => puzzle.grid[y][x]).join("");
+  }
+  function lineBetween(start, current) {
+    const dx = current[0] - start[0];
+    const dy = current[1] - start[1];
+    const len = Math.max(Math.abs(dx), Math.abs(dy));
+    if (!len) return [[start[0], start[1]]];
+    const snapped = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+    const sx = Math.round(Math.cos(snapped));
+    const sy = Math.round(Math.sin(snapped));
+    const side = puzzle.grid.length;
+    const cells = [];
+    for (let i = 0; i <= len; i++) {
+      const x = start[0] + sx * i;
+      const y = start[1] + sy * i;
+      if (x < 0 || y < 0 || x >= side || y >= side) break;
+      cells.push([x, y]);
+    }
+    return cells;
+  }
+  function finishDrag() {
+    drawing = false;
+    const word = lettersOf(drag);
+    const reversed = [...word].reverse().join("");
+    const hit = straight(drag)
+      ? puzzle?.placed?.find((item) => item.letters === word || item.letters === reversed)
+      : null;
+    if (hit && drag.length === hit.letters.length) {
+      foundWords.add(hit.letters);
+      for (const [x, y] of drag) foundCells.add(`${x},${y}`);
+      renderList();
+    }
+    drag = [];
+    dragStart = null;
+    paintPlay();
+  }
+  function cellFromPoint(x, y) {
+    const el = doc.elementFromPoint?.(x, y);
+    const span = el?.closest?.("[data-x]");
+    if (!span || !puzzleBox.contains?.(span)) return null;
+    return [Number(span.dataset.x), Number(span.dataset.y)];
+  }
+  function setLine(x, y) {
+    if (!dragStart) return;
+    const cell = cellFromPoint(x, y);
+    if (!cell) return;
+    drag = lineBetween(dragStart, cell);
+    paintPlay();
+  }
+  function beginDrag(x, y) {
+    const cell = cellFromPoint(x, y);
+    drawing = true;
+    dragStart = cell;
+    drag = cell ? [cell] : [];
+    paintPlay();
+  }
+  puzzleBox.addEventListener("mousedown", (event) => {
+    if (Date.now() < ignoreMouse || event.button !== 0 || !puzzle) return;
+    event.preventDefault?.();
+    beginDrag(event.clientX, event.clientY);
   });
+  const root = doc.body?.addEventListener ? doc.body : doc;
+  root.addEventListener("mousemove", (event) => {
+    if (!drawing || Date.now() < ignoreMouse) return;
+    setLine(event.clientX, event.clientY);
+  });
+  root.addEventListener("mouseup", (event) => {
+    if (!drawing) return;
+    if (event?.clientX != null) setLine(event.clientX, event.clientY);
+    finishDrag();
+  });
+  puzzleBox.addEventListener("touchstart", (event) => {
+    if (!puzzle) return;
+    ignoreMouse = Date.now() + 1000;
+    const touch = event.changedTouches?.[0] || event.touches?.[0];
+    if (!touch) return;
+    event.preventDefault?.();
+    beginDrag(touch.clientX, touch.clientY);
+  });
+  puzzleBox.addEventListener("touchmove", (event) => {
+    const touch = event.changedTouches?.[0] || event.touches?.[0];
+    if (!touch) return;
+    event.preventDefault?.();
+    setLine(touch.clientX, touch.clientY);
+  });
+  puzzleBox.addEventListener("touchend", (event) => {
+    ignoreMouse = Date.now() + 1000;
+    const touch = event.changedTouches?.[0];
+    if (touch) setLine(touch.clientX, touch.clientY);
+    if (drawing) finishDrag();
+    event.preventDefault?.();
+  });
+
+  const seedBox = doc.getElementById("ws-seed");
+  seedBox.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault?.();
+    make();
+  });
+  doc.getElementById("btn-example")?.addEventListener("click", () => {
+    doc.getElementById("ws-words").value = SAMPLE;
+    doc.getElementById("ws-size").value = "12";
+    make();
+  });
+  titleInput?.addEventListener("input", () => syncPrintTitle(doc, titleInput.value));
   doc.getElementById("btn-new").addEventListener("click", () =>
     withBusy(doc.getElementById("btn-new"), async () => {
-      if (!seedEdited) {
-        seedBox.value = String((((Date.now() ^ ((Math.random() * 1e6) | 0)) >>> 0) % 1000000) || 1);
-      }
+      seedBox.value = freshSeed();
       make();
     }),
   );
@@ -116,6 +259,7 @@ export function mount(doc) {
   });
   doc.getElementById("btn-print").addEventListener("click", () => {
     if (!puzzle) make();
+    syncPrintTitle(doc, titleInput?.value || "");
     if (typeof globalThis.print === "function") globalThis.print();
     else say("Press Download PDF to save the puzzle and the answer.");
   });

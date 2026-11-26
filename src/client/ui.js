@@ -1,3 +1,21 @@
+export function syncPrintTitle(doc, text) {
+  let el = doc.getElementById("print-title");
+  if (!el) {
+    el = doc.createElement("p");
+    el.setAttribute("id", "print-title");
+    el.setAttribute("class", "print-title");
+    el.setAttribute("hidden", "");
+    const h1 = doc.querySelector("h1");
+    if (h1?.insertAdjacentElement) h1.insertAdjacentElement("afterend", el);
+    else if (h1?.parent?.append) h1.parent.append(el);
+    else return;
+  }
+  const title = String(text || "").trim();
+  el.textContent = title;
+  if (title) el.removeAttribute("hidden");
+  else el.setAttribute("hidden", "");
+}
+
 export function nextTick() {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }

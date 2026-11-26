@@ -126,6 +126,10 @@ export function mount(doc) {
     pattern.value = value.toUpperCase();
     paintBoxes();
   });
+  doc.getElementById("btn-example")?.addEventListener("click", () => {
+    pattern.value = "C?T";
+    pattern.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   doc.getElementById("btn-find").addEventListener("click", () => run());
   more.addEventListener("click", () => {
     shown += PAGE_SIZE;
