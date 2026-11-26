@@ -59,6 +59,7 @@ export function mount(doc) {
   function showPlay() {
     if (board?.style?.setProperty) board.style.setProperty("--cols", String(maze?.width || 10));
     paint(view, maze, false, lineWidth(), player, true);
+    if (view?.dataset) view.dataset.steps = String(player.length);
   }
   function showClean() {
     if (!maze) return;
@@ -97,7 +98,41 @@ export function mount(doc) {
     if (cx < 0 || cy < 0 || cx >= maze.width || cy >= maze.height) return null;
     return [cx, cy];
   }
-  function step(cell) {
+  function bridge(from, to) {
+    const limit = 40;
+    const key = (x, y) => `${x},${y}`;
+    const goal = key(to[0], to[1]);
+    const start = key(from[0], from[1]);
+    if (start === goal) return [];
+    const prev = new Map([[start, ""]]);
+    const queue = [[from[0], from[1], 0]];
+    let found = false;
+    for (let i = 0; i < queue.length && !found; i++) {
+      const [x, y, depth] = queue[i];
+      if (depth >= limit) continue;
+      for (const [nx, ny] of neighbors(maze, x, y)) {
+        const next = key(nx, ny);
+        if (prev.has(next)) continue;
+        prev.set(next, key(x, y));
+        if (next === goal) {
+          found = true;
+          break;
+        }
+        queue.push([nx, ny, depth + 1]);
+      }
+    }
+    if (!found) return null;
+    const path = [];
+    let cursor = goal;
+    while (cursor && cursor !== start) {
+      const [x, y] = cursor.split(",").map(Number);
+      path.push([x, y]);
+      cursor = prev.get(cursor);
+    }
+    path.reverse();
+    return path;
+  }
+  function extend(cell) {
     if (!cell) return;
     if (!player.length) {
       if (cell[0] === 0 && cell[1] === 0) {
@@ -106,24 +141,35 @@ export function mount(doc) {
       } else say("Start at the marked entrance in the top-left cell.");
       return;
     }
-    const index = player.findIndex(([x, y]) => x === cell[0] && y === cell[1]);
-    if (index >= 0) {
-      player = player.slice(0, index + 1);
+    const seen = player.findIndex(([x, y]) => x === cell[0] && y === cell[1]);
+    if (seen >= 0) {
+      player = player.slice(0, seen + 1);
       return;
     }
     const last = player[player.length - 1];
-    const open = neighbors(maze, last[0], last[1]).some(([x, y]) => x === cell[0] && y === cell[1]);
-    if (open) player.push(cell);
-    else say("That cell is blocked by a wall. Stay on the open path.");
+    const hop = Math.abs(cell[0] - last[0]) + Math.abs(cell[1] - last[1]);
+    if (hop === 1) {
+      const open = neighbors(maze, last[0], last[1]).some(([x, y]) => x === cell[0] && y === cell[1]);
+      if (open) player.push(cell);
+      else say("That cell is blocked by a wall. Stay on the open path.");
+      return;
+    }
+    const path = bridge(last, cell);
+    if (!path) return;
+    for (const next of path) {
+      const back = player.findIndex(([x, y]) => x === next[0] && y === next[1]);
+      if (back >= 0) player = player.slice(0, back + 1);
+      else player.push(next);
+    }
   }
   function down(x, y) {
     drawing = true;
-    step(cellAt(x, y));
+    extend(cellAt(x, y));
     redrawPlay();
   }
   function move(x, y) {
     if (!drawing) return;
-    step(cellAt(x, y));
+    extend(cellAt(x, y));
     redrawPlay();
   }
   view.addEventListener("mousedown", (event) => {
@@ -139,23 +185,66 @@ export function mount(doc) {
   root.addEventListener("mouseup", () => {
     drawing = false;
   });
+  let gesture = null;
+  function rememberGesture(x, y) {
+    const current = {
+      snapshot: player.map(([cx, cy]) => [cx, cy]),
+      message: status.textContent,
+      cell: cellAt(x, y),
+      committed: false,
+      timer: 0,
+    };
+    current.timer = setTimeout(() => {
+      if (gesture !== current || current.committed) return;
+      current.committed = true;
+      drawing = true;
+      extend(current.cell);
+      redrawPlay();
+    }, 80);
+    gesture = current;
+  }
+  function cancelGesture() {
+    if (!gesture) return;
+    clearTimeout(gesture.timer);
+    player = gesture.snapshot.map(([cx, cy]) => [cx, cy]);
+    status.textContent = gesture.message;
+    gesture = null;
+    drawing = false;
+    showPlay();
+  }
+  function commitGesture(x, y) {
+    if (!gesture) return;
+    clearTimeout(gesture.timer);
+    if (!gesture.committed) {
+      gesture.committed = true;
+      drawing = true;
+      extend(gesture.cell);
+    }
+    drawing = true;
+    extend(cellAt(x, y));
+    redrawPlay();
+  }
   view.addEventListener("touchstart", (event) => {
     ignoreMouse = Date.now() + 1000;
     if (event.touches?.length > 1) {
-      drawing = false;
+      cancelGesture();
       pan = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      event.preventDefault?.();
       return;
     }
     pan = null;
     const touch = event.changedTouches?.[0] || event.touches?.[0];
     if (!touch) return;
     event.preventDefault?.();
-    down(touch.clientX, touch.clientY);
+    rememberGesture(touch.clientX, touch.clientY);
   });
   view.addEventListener("touchmove", (event) => {
-    if (event.touches?.length > 1 && pan && board) {
-      board.scrollLeft -= event.touches[0].clientX - pan.x;
-      board.scrollTop -= event.touches[0].clientY - pan.y;
+    if (event.touches?.length > 1) {
+      cancelGesture();
+      if (pan && board) {
+        board.scrollLeft -= event.touches[0].clientX - pan.x;
+        board.scrollTop -= event.touches[0].clientY - pan.y;
+      }
       pan = { x: event.touches[0].clientX, y: event.touches[0].clientY };
       event.preventDefault?.();
       return;
@@ -163,10 +252,24 @@ export function mount(doc) {
     const touch = event.changedTouches?.[0] || event.touches?.[0];
     if (!touch) return;
     event.preventDefault?.();
-    move(touch.clientX, touch.clientY);
+    commitGesture(touch.clientX, touch.clientY);
   });
   view.addEventListener("touchend", (event) => {
     ignoreMouse = Date.now() + 1000;
+    if (event.touches?.length) {
+      cancelGesture();
+      pan = null;
+      event.preventDefault?.();
+      return;
+    }
+    if (gesture && !gesture.committed) {
+      clearTimeout(gesture.timer);
+      gesture.committed = true;
+      drawing = true;
+      extend(gesture.cell);
+      redrawPlay();
+    }
+    gesture = null;
     drawing = false;
     pan = null;
     event.preventDefault?.();

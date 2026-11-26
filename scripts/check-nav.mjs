@@ -661,6 +661,100 @@ try {
   lines.push(printRow);
   console.log(printRow);
   if (!printOk) problems.push({ wsPrint, mazePrint });
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  await go("/maze-generator/");
+  await value(`new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      if (!document.getElementById("maze-status").textContent.includes("seed")) {
+        if (Date.now() - start > 5000) resolve(false);
+        else setTimeout(tick, 50);
+        return;
+      }
+      document.getElementById("maze-width").value = "40";
+      document.getElementById("maze-height").value = "40";
+      document.getElementById("maze-seed").value = "403481";
+      document.getElementById("maze-seed").dispatchEvent(new Event("change", { bubbles: true }));
+      resolve(true);
+    };
+    tick();
+  })`);
+  const big = generateMaze(40, 40, 403481).solution;
+  async function cellPoint(x, y) {
+    return value(`(() => {
+      const canvas = document.getElementById("maze-view");
+      const board = document.getElementById("maze-board");
+      board.scrollIntoView({ block: "start" });
+      const pad = 10;
+      const cell = 18;
+      const scale = canvas.getBoundingClientRect().width / canvas.width;
+      const px = (pad + (${x} + 0.5) * cell) * scale;
+      const py = (pad + (${y} + 0.5) * cell) * scale;
+      board.scrollLeft = Math.max(0, px - 40);
+      board.scrollTop = Math.max(0, py - 40);
+      const box = canvas.getBoundingClientRect();
+      return {
+        x: box.left + (pad + (${x} + 0.5) * cell) * (box.width / canvas.width),
+        y: box.top + (pad + (${y} + 0.5) * cell) * (box.height / canvas.height),
+      };
+    })()`);
+  }
+  async function swipe(from, to) {
+    const start = await cellPoint(from[0], from[1]);
+    await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: start.x, y: start.y, id: 1 }] }, sessionId);
+    const end = await cellPoint(to[0], to[1]);
+    await send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: end.x, y: end.y, id: 1 }] }, sessionId);
+    await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }, sessionId);
+  }
+  async function panOn(cell) {
+    const finger = await cellPoint(cell[0], cell[1]);
+    const second = { x: finger.x + 28, y: finger.y + 18 };
+    await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: finger.x, y: finger.y, id: 1 }] }, sessionId);
+    await send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [
+        { x: finger.x, y: finger.y, id: 1 },
+        { x: second.x, y: second.y, id: 2 },
+      ],
+    }, sessionId);
+    await send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [
+        { x: finger.x - 24, y: finger.y - 12, id: 1 },
+        { x: second.x - 24, y: second.y - 12, id: 2 },
+      ],
+    }, sessionId);
+    await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }, sessionId);
+  }
+  await swipe(big[0], big[9]);
+  const swiped = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+  const beforePan = await value(`document.getElementById("maze-status").textContent`);
+  await panOn(big[4]);
+  const afterPan = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+  const panStatus = await value(`document.getElementById("maze-status").textContent`);
+  let cursor = 9;
+  let pans = 1;
+  let panKept = true;
+  while (cursor < big.length - 1) {
+    const next = Math.min(cursor + 12, big.length - 1);
+    await swipe(big[cursor], big[next]);
+    cursor = next;
+    if (pans < 4) {
+      const before = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+      await panOn(big[4]);
+      const after = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+      if (after !== before) panKept = false;
+      pans += 1;
+    }
+  }
+  const ended = await value(`document.getElementById("maze-status").textContent.includes("You reached the exit.")`);
+  const full = Number(await value(`document.getElementById("maze-view").dataset.steps`));
+  const panOk = swiped === 10 && afterPan === 10 && panKept && panStatus === beforePan && !panStatus.includes("blocked") && ended && full === big.length && pans === 4;
+  const panRow = `maze pan ${panOk} swipe ${swiped} kept ${afterPan} end ${full}/${big.length} pans ${pans}`;
+  lines.push(panRow);
+  console.log(panRow);
+  if (!panOk) problems.push({ panRow, beforePan, panStatus, ended });
 } finally {
   ws.close();
   chrome.kill();
