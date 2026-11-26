@@ -33,6 +33,8 @@ export function mount(doc) {
   const status = doc.getElementById("sudoku-status");
   const grid = doc.getElementById("sudoku-grid");
   const paste = doc.getElementById("paste-input");
+  const pasteWrap = doc.getElementById("sudoku-paste");
+  const pasteBtn = doc.getElementById("btn-paste");
   const values = Array(81).fill(0);
   const fixed = Array(81).fill(false);
   const solved = Array(81).fill(false);
@@ -74,7 +76,15 @@ export function mount(doc) {
   function select(index) {
     selected = (index + 81) % 81;
     paint();
-    doc.getElementById("cell-" + selected).focus();
+    const cell = doc.getElementById("cell-" + selected);
+    const keyIn = doc.getElementById("sudoku-key");
+    const narrow = typeof matchMedia === "function" && matchMedia("(max-width: 799px)").matches;
+    if (narrow && keyIn) {
+      keyIn.value = "";
+      keyIn.focus();
+    } else {
+      cell.focus();
+    }
   }
   function writeDigit(digit) {
     clearMarks();
@@ -90,7 +100,13 @@ export function mount(doc) {
   for (let i = 0; i < 81; i++) {
     doc.getElementById("cell-" + i).addEventListener("click", () => select(i));
   }
-  grid.addEventListener("keydown", (event) => {
+  const keyIn = doc.getElementById("sudoku-key");
+  keyIn?.addEventListener("input", () => {
+    const digit = (keyIn.value.match(/[1-9]/g) || []).pop();
+    keyIn.value = "";
+    if (digit) writeDigit(Number(digit));
+  });
+  function onGridKey(event) {
     const key = event.key;
     if (key >= "1" && key <= "9") {
       writeDigit(Number(key));
@@ -111,12 +127,19 @@ export function mount(doc) {
       select(selected - 9);
       event.preventDefault?.();
     }
-  });
+  }
+  grid.addEventListener("keydown", onGridKey);
+  keyIn?.addEventListener("keydown", onGridKey);
   for (let digit = 1; digit <= 9; digit++) {
     doc.getElementById("btn-n" + digit).addEventListener("click", () => writeDigit(digit));
   }
   doc.getElementById("btn-erase").addEventListener("click", () => writeDigit(0));
 
+  pasteBtn?.addEventListener("click", () => {
+    const open = pasteWrap.classList.toggle("open");
+    pasteBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) paste.focus();
+  });
   paste.addEventListener("input", () => {
     if (!paste.value.trim()) return;
     const parsed = parseGrid(paste.value);

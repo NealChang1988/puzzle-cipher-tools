@@ -38,6 +38,9 @@ export function mount(doc) {
     }
     return dictionary;
   }
+  function visibleAnswers(solved) {
+    return hideOffensive(solved?.solutions || [], dictionary?.offensive || new Set());
+  }
   function render(solved) {
     results.replaceChildren();
     if (!solved) {
@@ -57,13 +60,7 @@ export function mount(doc) {
       results.append(p);
       return;
     }
-    const offensive = dictionary.offensive || new Set();
-    const visible = hideOffensive(solved.solutions, offensive);
-    if (visible.hidden) {
-      const note = doc.createElement("p");
-      note.textContent = `${visible.hidden} offensive ${visible.hidden === 1 ? "answer" : "answers"} hidden`;
-      results.append(note);
-    }
+    const visible = visibleAnswers(solved);
     const list = visible.shown.slice(0, 10);
     if (!list.length) {
       const p = doc.createElement("p");
@@ -72,6 +69,11 @@ export function mount(doc) {
         : "No answer yet. Add a known letter, such as Q=A, and press Solve again.";
       results.append(p);
       return;
+    }
+    if (visible.hidden) {
+      const note = doc.createElement("p");
+      note.textContent = `${visible.hidden} offensive ${visible.hidden === 1 ? "answer" : "answers"} hidden`;
+      results.append(note);
     }
     list.forEach((item, index) => {
       const block = doc.createElement("article");
@@ -90,49 +92,83 @@ export function mount(doc) {
       results.append(note);
     }
   }
+  async function solveCurrent() {
+    try {
+      await ready();
+    } catch {
+      say(WORD_LIST_LOAD_ERROR.replace("Find words", "Solve"));
+      return null;
+    }
+    const parsed = parseKnown(known.value);
+    if (parsed.errors.length) {
+      last = null;
+      render(null);
+      say(`Could not read ${parsed.errors[0]}. Write known letters as Q=A, separated by commas.`);
+      return null;
+    }
+    last = solveCryptogram(text.value, dictionary, {
+      known: parsed.map,
+      noSelf: selfBox.checked,
+      deadline: Date.now() + 5000,
+    });
+    return last;
+  }
+  function bestShown(solved) {
+    return visibleAnswers(solved).shown[0] || null;
+  }
   async function run() {
     await withBusy(buttons, async () => {
-      try {
-        await ready();
-      } catch {
-        say(WORD_LIST_LOAD_ERROR.replace("Find words", "Solve"));
+      const solved = await solveCurrent();
+      if (!solved) return;
+      render(solved);
+      if (!solved.ok) {
+        say("");
         return;
       }
-      const parsed = parseKnown(known.value);
-      if (parsed.errors.length) {
-        say(`Could not read ${parsed.errors[0]}. Write known letters as Q=A, separated by commas.`);
+      if (!bestShown(solved)) {
+        say("No answer yet. Add a known letter, such as Q=A, and press Solve again.");
         return;
       }
-      last = solveCryptogram(text.value, dictionary, {
-        known: parsed.map,
-        noSelf: selfBox.checked,
-        deadline: Date.now() + 5000,
-      });
-      render(last);
-      if (last.ok && last.solutions.length) say("The most common answer is first. Press Copy best answer to copy it.");
+      say("The most common answer is first. Press Copy best answer to copy it.");
+    });
+  }
+  async function hint(kind) {
+    await withBusy(buttons, async () => {
+      const solved = await solveCurrent();
+      if (!solved) return;
+      if (!solved.ok) {
+        render(solved);
+        say("");
+        return;
+      }
+      const best = bestShown(solved);
+      if (!best) {
+        render(solved);
+        say("No answer yet. Add a known letter, such as Q=A, and press Solve again.");
+        return;
+      }
+      if (kind === "letter") {
+        const pair = [...best.assign.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))[0];
+        say(`One letter: ${pair[0]} stands for ${pair[1].toUpperCase()}.`);
+        return;
+      }
+      const cipher = (text.value.toUpperCase().match(/[A-Z]+/) || [])[0];
+      const plain = [...cipher].map((ch) => best.assign.get(ch) || "_").join("").toUpperCase();
+      say(`One word: ${cipher} is ${plain}.`);
     });
   }
 
+  text.addEventListener("input", () => {
+    last = null;
+    render(null);
+    say("");
+  });
+  known.addEventListener("input", () => {
+    if (status.textContent.startsWith("Could not read")) say("");
+  });
   doc.getElementById("btn-solve").addEventListener("click", () => run());
-  doc.getElementById("btn-letter").addEventListener("click", () => {
-    const best = last?.solutions?.[0];
-    if (!best) {
-      say("Press Solve first, then press Show one letter.");
-      return;
-    }
-    const pair = [...best.assign.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))[0];
-    say(`One letter: ${pair[0]} stands for ${pair[1].toUpperCase()}.`);
-  });
-  doc.getElementById("btn-word").addEventListener("click", () => {
-    const best = last?.solutions?.[0];
-    if (!best) {
-      say("Press Solve first, then press Show one word.");
-      return;
-    }
-    const cipher = (text.value.toUpperCase().match(/[A-Z]+/) || [])[0];
-    const plain = [...cipher].map((ch) => best.assign.get(ch) || "_").join("").toUpperCase();
-    say(`One word: ${cipher} is ${plain}.`);
-  });
+  doc.getElementById("btn-letter").addEventListener("click", () => hint("letter"));
+  doc.getElementById("btn-word").addEventListener("click", () => hint("word"));
   doc.getElementById("btn-copy").addEventListener("click", () =>
     withBusy(doc.getElementById("btn-copy"), async () => {
       const best = hideOffensive(last?.solutions || [], dictionary?.offensive || new Set()).shown[0];

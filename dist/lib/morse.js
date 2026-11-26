@@ -297,7 +297,11 @@ function encodeWav(samples, sampleRate) {
 
 export function unknownMessage(unknown) {
   if (!unknown.length) return "";
-  return `These characters could not be turned into Morse code: ${unknown.join(", ")}.`;
+  const shown = unknown.map((item) => `"${item}"`).join(", ");
+  if (unknown.length === 1 && /^[.\-]+$/.test(unknown[0])) {
+    return `This is not a Morse code letter: ${shown}`;
+  }
+  return `These characters could not be turned into Morse code: ${shown}`;
 }
 
 export function chartRows() {

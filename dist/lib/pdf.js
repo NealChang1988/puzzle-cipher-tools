@@ -9,7 +9,7 @@ export function buildPdf(pages) {
     objects.push(body);
     return objects.length;
   };
-  const fontId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>");
+  const fontId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
   const pageIds = [];
   for (const page of pages) {
     const stream = page.stream;
@@ -78,14 +78,12 @@ export function mazePdf(maze, { title = "Maze", showSolution = false } = {}) {
   }
   if (showSolution && maze.solution?.length) {
     commands.push("1.5 w", "0.6 0.15 0.05 RG");
-    const points = maze.solution.map(([x, y]) => {
-      const px = ox + (x + 0.5) * cell;
-      const py = top - (y + 0.5) * cell;
-      return `${px} ${py}`;
-    });
-    commands.push(`${points[0]} m`);
-    for (const point of points.slice(1)) commands.push(`${point} l`);
-    commands.push("S");
+    const start = `${ox + 0.5 * cell} ${top + 0.45 * cell}`;
+    const points = maze.solution.map(([x, y]) => `${ox + (x + 0.5) * cell} ${top - (y + 0.5) * cell}`);
+    const end = `${ox + (maze.width - 0.5) * cell} ${oy - 0.45 * cell}`;
+    commands.push(`${start} m`);
+    for (const point of points) commands.push(`${point} l`);
+    commands.push(`${end} l`, "S");
   }
   return { width, height, stream: commands.join("\n") };
 }
@@ -101,10 +99,13 @@ export function wordSearchPdf(puzzle, { title = "Word search", answer = false } 
   const width = 612;
   const height = 792;
   const side = puzzle.grid.length;
-  const cell = Math.min(22, (width - 96) / side);
-  const ox = 48;
-  const gridTop = height - 72;
-  const fontSize = Math.max(8, Math.round(cell - 8));
+  const list = (puzzle.placed || []).map((item) => item.original || item.letters);
+  const listRows = Math.ceil(list.length / 3) || 1;
+  const listBlock = 18 + listRows * 16;
+  const cell = Math.min((width - 56) / side, (height - 96 - listBlock) / side);
+  const ox = (width - side * cell) / 2;
+  const gridTop = height - 64;
+  const fontSize = Math.max(12, Math.round(cell * 0.55));
   const commands = [
     "0 0 0 RG",
     "0 0 0 rg",
@@ -139,9 +140,19 @@ export function wordSearchPdf(puzzle, { title = "Word search", answer = false } 
       }
     }
   }
-  const labels = (puzzle.placed || []).map((item) => item.original || item.letters);
-  const listY = gridTop - side * cell - 22;
-  commands.push("BT", "/F1 11 Tf", `48 ${listY} Td`, `(${escapePdf(labels.join("  "))}) Tj`, "ET");
+  const colW = (width - 64) / 3;
+  let ly = gridTop - side * cell - 28;
+  list.forEach((label, index) => {
+    const col = index % 3;
+    const row = Math.floor(index / 3);
+    commands.push(
+      "BT",
+      "/F1 12 Tf",
+      `${(32 + col * colW).toFixed(2)} ${(ly - row * 16).toFixed(2)} Td`,
+      `(${escapePdf(label)}) Tj`,
+      "ET",
+    );
+  });
   return { width, height, stream: commands.join("\n") };
 }
 

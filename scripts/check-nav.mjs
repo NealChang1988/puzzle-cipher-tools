@@ -158,6 +158,93 @@ try {
   if (phone.links.length !== 9 || phoneClipped.length || phone.overflowX === "auto" || phone.overflowX === "scroll") {
     problems.push({ width: 375, overflowX: phone.overflowX, clipped: phoneClipped, names: phone.links.map((link) => link.name) });
   }
+
+  async function pdfPages(paperWidth, paperHeight) {
+    const printed = await send(
+      "Page.printToPDF",
+      {
+        paperWidth,
+        paperHeight,
+        printBackground: true,
+        preferCSSPageSize: false,
+      },
+      sessionId,
+    );
+    const text = Buffer.from(printed.result.data, "base64").toString("latin1");
+    return (text.match(/\/Type\s*\/Page(?!s)/g) || []).length;
+  }
+  async function settle(expression) {
+    const ready = await send(
+      "Runtime.evaluate",
+      { expression, awaitPromise: true, returnByValue: true },
+      sessionId,
+    );
+    return ready.result.result.value;
+  }
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+  await send("Page.navigate", { url: `http://127.0.0.1:${port}/maze-generator/` }, sessionId);
+  const mazeReady = await settle(`new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      const status = document.querySelector("#maze-status");
+      if (status && status.textContent.includes("seed")) resolve(true);
+      else if (Date.now() - start > 5000) resolve(false);
+      else setTimeout(tick, 50);
+    };
+    tick();
+  })`);
+  await send("Runtime.evaluate", { expression: "document.getElementById('btn-show').click()", returnByValue: true }, sessionId);
+  const mazeShown = await settle(`document.getElementById("maze-answer").classList.contains("answer-only") === false && document.getElementById("maze-answer").classList.contains("print-answer")`);
+  const mazeLetter = await pdfPages(8.5, 11);
+  const mazeA4 = await pdfPages(8.27, 11.69);
+  const mazeRow = `maze print with solution: letter ${mazeLetter}, A4 ${mazeA4}, ready ${mazeReady}, shown ${mazeShown}`;
+  lines.push(mazeRow);
+  console.log(mazeRow);
+  if (!mazeReady || !mazeShown || mazeLetter !== 2 || mazeA4 !== 2) problems.push({ print: "maze", mazeLetter, mazeA4, mazeReady, mazeShown });
+
+  await send("Page.navigate", { url: `http://127.0.0.1:${port}/word-search-generator/` }, sessionId);
+  const wordReady = await settle(`new Promise((resolve) => {
+    const start = Date.now();
+    const words = document.getElementById("ws-words");
+    if (words) words.value = "cat, dog, lion";
+    const tick = () => {
+      document.getElementById("btn-new").click();
+      const status = document.getElementById("ws-status").textContent;
+      if (status.includes("seed")) resolve(true);
+      else if (Date.now() - start > 5000) resolve(false);
+      else setTimeout(tick, 150);
+    };
+    tick();
+  })`);
+  await send("Runtime.evaluate", { expression: "document.getElementById('btn-show').click()", returnByValue: true }, sessionId);
+  const wordShown = await settle(`(() => {
+    const answer = document.getElementById("ws-answer");
+    return answer.classList.contains("answer-only") === false && answer.classList.contains("print-answer") && /[A-Z]/.test(answer.textContent);
+  })()`);
+  const wordA4 = await pdfPages(8.27, 11.69);
+  const wordRow = `word search print with answer: A4 ${wordA4}, ready ${wordReady}, shown ${wordShown}`;
+  lines.push(wordRow);
+  console.log(wordRow);
+  if (!wordReady || !wordShown || wordA4 !== 2) problems.push({ print: "word-search", wordA4, wordReady, wordShown });
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  await send("Page.navigate", { url: `http://127.0.0.1:${port}/sudoku-solver/` }, sessionId);
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const sudoku = await settle(`(() => {
+    const ids = ["btn-n1", "btn-n2", "btn-n3", "btn-n4", "btn-n5", "btn-n6", "btn-n7", "btn-n8", "btn-n9", "btn-solve"];
+    const bottoms = {};
+    for (const id of ids) {
+      const box = document.getElementById(id).getBoundingClientRect();
+      bottoms[id] = Math.round(box.bottom);
+    }
+    const max = Math.max(...Object.values(bottoms));
+    return { bottoms, max, scroll: window.scrollY };
+  })()`);
+  const sudokuRow = `sudoku 375x812: number keys and Solve bottom ${sudoku.max}`;
+  lines.push(sudokuRow);
+  console.log(sudokuRow);
+  if (!sudoku || sudoku.scroll !== 0 || sudoku.max > 812) problems.push({ sudoku });
 } finally {
   ws.close();
   chrome.kill();

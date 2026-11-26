@@ -106,7 +106,11 @@ export function mount(doc) {
       last = findPattern(dictionary.words, dictionary.levelOf, dictionary.offensive, pattern.value);
       shown = PAGE_SIZE;
       paint();
-      if (last.ok && !last.empty) say("Common words are first. Click a word to copy it, or press Copy all.");
+      if (!last.ok || last.empty || !last.words?.length) {
+        say(last.ok && !last.empty ? "No words found. Change a letter and press Find words again." : "");
+      } else {
+        say("Common words are first. Click a word to copy it, or press Copy all.");
+      }
     });
   }
 

@@ -34,6 +34,7 @@ test("ITU examples and timing", () => {
   const bad = translate(".-.-. ......");
   assert.equal(bad.output, "+#");
   assert.deepEqual(bad.unknown, ["......"]);
+  assert.equal(unknownMessage(bad.unknown), 'This is not a Morse code letter: "......"');
 
   for (const [wpm, dot, dash, letterGap, wordGap] of [
     [5, 240, 720, 720, 1680],

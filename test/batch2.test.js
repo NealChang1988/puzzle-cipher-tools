@@ -26,6 +26,18 @@ const dictionary = { words, levelOf };
 const CIPHER = "YGXK LEGKT QFR LTCTF NTQKL QUG GXK YQZITKL WKGXUIZ YGKZI GF ZIOL EGFZOFTFZ Q FTV FQZOGF";
 const PLAIN = "FOUR SCORE AND SEVEN YEARS AGO OUR FATHERS BROUGHT FORTH ON THIS CONTINENT A NEW NATION";
 
+test("maze entrance and exit are open in the wall data", () => {
+  for (const [width, height, seed] of [
+    [10, 10, 12345],
+    [25, 15, 2026],
+    [5, 5, 1],
+  ]) {
+    const maze = generateMaze(width, height, seed);
+    assert.equal((maze.open[0][0] & 1) !== 0, true, `${width}x${height} entrance`);
+    assert.equal((maze.open[height - 1][width - 1] & 4) !== 0, true, `${width}x${height} exit`);
+  }
+});
+
 test("maze seeds stay perfect, connected, and repeatable", () => {
   const cases = [
     [10, 10, 12345, 99],
@@ -124,7 +136,10 @@ test("word search placement rules, cleaning, and a word that does not fit", () =
   assert.equal(placedLetters, 40);
   assert.equal(marked, 40);
   assert.equal(boxed, 40);
+  assert.equal(canvas.width >= 1200, true);
   assert.equal(drawGrid(canvas, exampleMarks, false), 0);
+  assert.match(pdf, /Helvetica/);
+  assert.match(answerPage.stream, /\/F1 12 Tf/);
 });
 
 test("cryptogram ranks the Lincoln line first", () => {
@@ -152,6 +167,37 @@ test("cryptogram ranks the Lincoln line first", () => {
   assert.equal(visible.shown[0].text, PLAIN);
   assert.equal(visible.shown.some((item) => /\bSEMEN\b/.test(item.text)), false);
   assert.ok(visible.hidden >= 1);
+});
+
+test("cryptogram ranks common quotes first", () => {
+  const key = "ZEBRASCDFGHIJKLMNOPQTUVWXY";
+  const encrypt = (plain) =>
+    [...plain.toUpperCase()]
+      .map((ch) => (ch >= "A" && ch <= "Z" ? key[ch.charCodeAt(0) - 65] : ch))
+      .join("");
+  const quotes = [
+    "TO BE OR NOT TO BE",
+    "ALL THAT GLITTERS IS NOT GOLD.",
+    "WHERE THERE IS A WILL, THERE IS A WAY.",
+    "WELL DONE IS BETTER THAN WELL SAID.",
+    "I THINK, THEREFORE I AM.",
+    "IT IS NOT WHAT YOU LOOK AT THAT MATTERS, IT IS WHAT YOU SEE.",
+    "THE ONLY THING WE HAVE TO FEAR IS FEAR ITSELF.",
+    "PRACTICE MAKES PERFECT.",
+    "ACTIONS SPEAK LOUDER THAN WORDS.",
+    "BETTER LATE THAN NEVER.",
+    "KNOWLEDGE IS POWER.",
+    "LET THERE BE LIGHT.",
+  ];
+  const normalize = (text) => text.replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
+  let first = 0;
+  for (const quote of quotes) {
+    const solved = solveCryptogram(encrypt(quote), dictionary);
+    const top = normalize(solved.solutions[0]?.text || "");
+    if (top === normalize(quote)) first += 1;
+    else assert.fail(`${quote} ranked ${solved.solutions[0]?.text || "(none)"}`);
+  }
+  assert.equal(first, 12);
 });
 
 test("crossword patterns match the ENABLE counts", () => {

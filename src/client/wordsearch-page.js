@@ -26,6 +26,7 @@ export function mount(doc) {
   const list = doc.getElementById("ws-list");
   let puzzle = null;
   let show = false;
+  let seedEdited = false;
 
   function directions() {
     return ["E", "S", "SE", "NE", "W", "N", "NW", "SW"].filter((name) => doc.getElementById(`dir-${name}`).checked);
@@ -95,10 +96,14 @@ export function mount(doc) {
     say(`Made a ${puzzle.size} by ${puzzle.size} puzzle, seed ${puzzle.seed}.${skipped}`);
   }
 
+  const seedBox = doc.getElementById("ws-seed");
+  seedBox.addEventListener("input", () => {
+    seedEdited = true;
+  });
   doc.getElementById("btn-new").addEventListener("click", () =>
     withBusy(doc.getElementById("btn-new"), async () => {
-      if (!doc.getElementById("ws-seed").value) {
-        doc.getElementById("ws-seed").value = String((Date.now() % 1000000) | 0);
+      if (!seedEdited) {
+        seedBox.value = String((((Date.now() ^ ((Math.random() * 1e6) | 0)) >>> 0) % 1000000) || 1);
       }
       make();
     }),
@@ -119,13 +124,14 @@ export function mount(doc) {
       if (!puzzle) make();
       if (!puzzle?.ok) return;
       const canvas = doc.createElement("canvas");
-      drawGrid(canvas, puzzle, show);
+      const title = doc.getElementById("ws-title").value.trim() || "Word search";
+      drawGrid(canvas, puzzle, show, title);
       const blob = await new Promise((resolve) => canvas.toBlob((value) => resolve(value), "image/png"));
       if (!blob) {
         say("The picture could not be created. Press Download PDF instead.");
         return;
       }
-      const name = `word-search-${slugName(doc.getElementById("ws-title").value, "puzzle")}.png`;
+      const name = `word-search-${slugName(title, "puzzle")}${show ? "-answer" : ""}.png`;
       downloadBlob(doc, name, blob);
       say(`Downloaded ${name}.`);
     }),
@@ -136,7 +142,7 @@ export function mount(doc) {
       if (!puzzle?.ok) return;
       const title = doc.getElementById("ws-title").value.trim() || "Word search";
       const pdf = wordSearchDocument(puzzle, title);
-      const name = `word-search-${slugName(title, "puzzle")}.pdf`;
+      const name = `word-search-${slugName(title, "puzzle")}${show ? "-answer" : ""}.pdf`;
       downloadBlob(doc, name, new Blob([pdf], { type: "application/pdf" }));
       say(`Downloaded ${name}. Page 1 is the puzzle. Page 2 is the answer.`);
     }),
@@ -155,30 +161,49 @@ export function placedCells(puzzle) {
   return cells;
 }
 
-export function drawGrid(canvas, puzzle, marks) {
+export function drawGrid(canvas, puzzle, marks, title = "Word search") {
   const ctx = canvas.getContext("2d");
   const side = puzzle.grid.length;
-  const cell = 28;
+  const list = (puzzle.placed || []).map((item) => item.original || item.letters);
+  const cols = 3;
+  const rows = Math.max(1, Math.ceil(list.length / cols));
+  const width = 1200;
+  const pad = 36;
+  const titleH = 64;
+  const listH = 48 + rows * 36;
+  const cell = Math.floor((width - pad * 2) / side);
+  const gridW = cell * side;
+  const ox = Math.floor((width - gridW) / 2);
   const marked = marks ? placedCells(puzzle) : new Set();
-  canvas.width = side * cell + 24;
-  canvas.height = side * cell + 24;
+  canvas.width = width;
+  canvas.height = titleH + gridW + listH;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#111111";
-  ctx.font = "16px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.font = "32px sans-serif";
+  ctx.fillText(title || "Word search", width / 2, 32);
+  ctx.font = `${Math.max(18, Math.floor(cell * 0.45))}px sans-serif`;
   let boxed = 0;
   puzzle.grid.forEach((row, y) => {
     row.forEach((letter, x) => {
-      ctx.fillText(letter, 12 + (x + 0.5) * cell, 12 + (y + 0.5) * cell);
+      ctx.fillText(letter, ox + (x + 0.5) * cell, titleH + (y + 0.5) * cell);
       if (marked.has(`${x},${y}`)) {
         ctx.strokeStyle = "#111111";
         ctx.lineWidth = 2;
-        ctx.strokeRect(12 + x * cell + 2, 12 + y * cell + 2, cell - 4, cell - 4);
+        ctx.strokeRect(ox + x * cell + 3, titleH + y * cell + 3, cell - 6, cell - 6);
         boxed += 1;
       }
     });
+  });
+  ctx.font = "22px sans-serif";
+  ctx.textAlign = "left";
+  const colW = (width - pad * 2) / cols;
+  list.forEach((label, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    ctx.fillText(label, pad + col * colW, titleH + gridW + 28 + row * 36);
   });
   return boxed;
 }

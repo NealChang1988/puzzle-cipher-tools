@@ -58,7 +58,7 @@ export function mazeBody() {
     </div>
     <p id="maze-status" class="status" role="status">The maze will show up here.</p>
     <canvas id="maze-view" class="maze-canvas" width="320" height="180" aria-label="Maze"></canvas>
-    <canvas id="maze-answer" class="maze-canvas answer-only" width="320" height="180" aria-label="Maze answer"></canvas>
+    <canvas id="maze-answer" class="maze-canvas print-answer answer-only" width="320" height="180" aria-label="Maze answer"></canvas>
     <div class="actions">
       ${button("btn-new", "New maze", "refresh", "primary")}
       ${button("btn-show", "Show solution", "bulb")}
@@ -116,7 +116,7 @@ export function wordSearchBody() {
       <label for="ws-words">Words</label>
       <textarea id="ws-words" rows="3" spellcheck="false" placeholder="One word on each line, or separated by commas"></textarea>
     </div>
-    <p id="ws-status" class="status" role="status">Your word search will show up here.</p>
+    <p id="ws-status" class="status" role="status"></p>
     <div id="ws-puzzle" class="sheet">Your word search will show up here.</div>
     <div class="controls">
       <div class="choices">
@@ -134,7 +134,7 @@ export function wordSearchBody() {
       ${button("btn-pdf", "Download PDF", "download")}
     </div>
     <div id="ws-list"></div>
-    <div id="ws-answer" class="sheet answer-only"></div>
+    <div id="ws-answer" class="sheet print-answer answer-only"></div>
     <p class="fine">Spaces, hyphens, and numbers are removed before a word is placed. The list under the grid keeps the words as you typed them. Each placed word appears once.</p>
     <p class="limits">Up to 40 words. Each word is 2 to 25 letters after cleaning, and no longer than the grid. A word that does not fit after 300 tries is skipped, and the reason is listed.</p>
   </section>

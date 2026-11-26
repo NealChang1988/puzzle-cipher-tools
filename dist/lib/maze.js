@@ -68,6 +68,8 @@ export function generateMaze(width, height, seed) {
     }
     if (!moved) stack.pop();
   }
+  open[0][0] |= N;
+  open[h - 1][w - 1] |= S;
   const maze = { ok: true, width: w, height: h, seed: seed >>> 0, open, passages };
   maze.solution = solutionPath(maze);
   return maze;
@@ -77,7 +79,11 @@ export function neighbors(maze, x, y) {
   const bits = maze.open[y][x];
   const out = [];
   for (const dir of DIRS) {
-    if (bits & dir.bit) out.push([x + dir.dx, y + dir.dy]);
+    if (!(bits & dir.bit)) continue;
+    const nx = x + dir.dx;
+    const ny = y + dir.dy;
+    if (nx < 0 || ny < 0 || nx >= maze.width || ny >= maze.height) continue;
+    out.push([nx, ny]);
   }
   return out;
 }
