@@ -158,6 +158,9 @@ export function mount(doc) {
     });
   }
 
+  doc.getElementById("btn-example")?.addEventListener("click", () => {
+    text.value = "YGXK LEGKT QFR LTCTF NTQKL QUG GXK YQZITKL WKGXUIZ YGKZI GF ZIOL EGFZOFTFZ Q FTV FQZOGF";
+  });
   text.addEventListener("input", () => {
     last = null;
     render(null);

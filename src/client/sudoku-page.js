@@ -16,6 +16,8 @@ import {
 } from "../lib/sudoku.js";
 import { COPY_FAILED, copyText, downloadBlob, withBusy } from "./ui.js";
 
+const EXAMPLE = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+
 export const REQUIRED_IDS = [
   "sudoku-grid",
   "sudoku-status",
@@ -135,6 +137,10 @@ export function mount(doc) {
   }
   doc.getElementById("btn-erase").addEventListener("click", () => writeDigit(0));
 
+  doc.getElementById("btn-example")?.addEventListener("click", () => {
+    paste.value = EXAMPLE;
+    paste.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   pasteBtn?.addEventListener("click", () => {
     const open = pasteWrap.classList.toggle("open");
     pasteBtn.setAttribute("aria-expanded", open ? "true" : "false");

@@ -11,6 +11,7 @@ import { createReadStream, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import { generateMaze } from "../src/lib/maze.js";
 import { build } from "./build.js";
 
 const dist = build({ distDir: fileURLToPath(new URL("../dist", import.meta.url)) });
@@ -98,6 +99,7 @@ try {
   const sessionId = attached.result.sessionId;
   await send("Page.enable", {}, sessionId);
   await send("Runtime.enable", {}, sessionId);
+  await send("Input.enable", {}, sessionId);
   const measure = `(() => {
     const nav = document.querySelector(selector);
     const style = getComputedStyle(nav);
@@ -245,6 +247,287 @@ try {
   lines.push(sudokuRow);
   console.log(sudokuRow);
   if (!sudoku || sudoku.scroll !== 0 || sudoku.max > 812) problems.push({ sudoku });
+
+  async function go(url) {
+    await send("Page.navigate", { url: `http://127.0.0.1:${port}${url}` }, sessionId);
+    await new Promise((resolve) => setTimeout(resolve, 350));
+  }
+  async function value(expression) {
+    const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true }, sessionId);
+    if (result.result.exceptionDetails) throw new Error(result.result.exceptionDetails.text || "evaluate failed");
+    return result.result.result.value;
+  }
+  async function mouseDrag(points) {
+    const first = points[0];
+    await send("Input.dispatchMouseEvent", { type: "mousePressed", x: first.x, y: first.y, button: "left", clickCount: 1 }, sessionId);
+    for (const point of points.slice(1)) {
+      await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: point.x, y: point.y, button: "left", buttons: 1 }, sessionId);
+    }
+    const last = points[points.length - 1];
+    await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: last.x, y: last.y, button: "left", clickCount: 1 }, sessionId);
+  }
+  async function touchDrag(points) {
+    await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: points[0].x, y: points[0].y, id: 1 }] }, sessionId);
+    for (const point of points.slice(1)) {
+      await send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: point.x, y: point.y, id: 1 }] }, sessionId);
+    }
+    await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] }, sessionId);
+  }
+  const wordCenters = `(() => {
+    const want = word;
+    const spans = [...document.querySelectorAll("#ws-puzzle [data-x]")];
+    const side = Math.round(Math.sqrt(spans.length));
+    const grid = Array.from({ length: side }, () => Array(side).fill(""));
+    for (const span of spans) grid[span.dataset.y][span.dataset.x] = span.textContent;
+    const dirs = [[1, 0], [0, 1], [1, 1], [1, -1], [-1, 0], [0, -1], [-1, -1], [-1, 1]];
+    let found = null;
+    for (let y = 0; y < side && !found; y++) {
+      for (let x = 0; x < side && !found; x++) {
+        for (const [dx, dy] of dirs) {
+          const pts = [];
+          let ok = true;
+          for (let i = 0; i < want.length; i++) {
+            const cx = x + dx * i;
+            const cy = y + dy * i;
+            if (cy < 0 || cx < 0 || cy >= side || cx >= side || grid[cy][cx] !== want[i]) {
+              ok = false;
+              break;
+            }
+            pts.push([cx, cy]);
+          }
+          if (ok) found = pts;
+        }
+      }
+    }
+    if (!found) return null;
+    document.querySelector("#ws-puzzle").scrollIntoView({ block: "center" });
+    return found.map(([x, y]) => {
+      const span = document.querySelector('#ws-puzzle [data-x="' + x + '"][data-y="' + y + '"]');
+      const box = span.getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    });
+  })()`;
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  const examples = [
+    ["/sudoku-solver/", "document.getElementById('paste-input').value.startsWith('530070000') && document.getElementById('cell-0').textContent === '5'"],
+    ["/cryptogram-solver/", "document.getElementById('crypto-text').value.startsWith('YGXK')"],
+    ["/crossword-solver/", "document.getElementById('cross-pattern').value === 'C?T'"],
+    ["/anagram-solver/", "document.getElementById('letters-input').value === 'LISTEN'"],
+    ["/unscramble-words/", "document.getElementById('letters-input').value === 'P, L, O, E'"],
+    ["/word-search-generator/", "document.getElementById('ws-words').value.includes('ice cream') && !document.getElementById('ws-puzzle').textContent.includes('will show up here')"],
+  ];
+  for (const [url, check] of examples) {
+    await go(url);
+    const filled = await value(`new Promise((resolve) => {
+      const start = Date.now();
+      const tick = () => {
+        document.getElementById("btn-example").click();
+        const button = document.getElementById("btn-example").getBoundingClientRect();
+        const ok = button.width > 20 && button.height > 20 && (${check});
+        if (ok) resolve(true);
+        else if (Date.now() - start > 5000) resolve(false);
+        else setTimeout(tick, 120);
+      };
+      tick();
+    })`);
+    const row = `try example ${url} ${filled}`;
+    lines.push(row);
+    console.log(row);
+    if (!filled) problems.push({ example: url });
+  }
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+  await go("/word-search-generator/");
+  const playReady = await value(`new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      document.getElementById("ws-words").value = "CAT, DOG";
+      document.getElementById("ws-size").value = "12";
+      const seed = document.getElementById("ws-seed");
+      seed.value = "1";
+      seed.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      const status = document.getElementById("ws-status").textContent;
+      if (status.includes("seed 1")) resolve(true);
+      else if (Date.now() - start > 5000) resolve(false);
+      else setTimeout(tick, 120);
+    };
+    tick();
+  })`);
+  const cat = await value(wordCenters.replace("word", JSON.stringify("CAT")));
+  if (cat) await mouseDrag(cat);
+  const catFound = await value(`document.querySelector('#ws-list [data-letters="CAT"]')?.classList.contains("found-word") === true`);
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  const dog = await value(wordCenters.replace("word", JSON.stringify("DOG")));
+  if (dog) await touchDrag(dog);
+  const dogFound = await value(`document.querySelector('#ws-list [data-letters="DOG"]')?.classList.contains("found-word") === true`);
+  const wordPlay = `word search drag mouse ${catFound} touch ${dogFound} ready ${playReady}`;
+  lines.push(wordPlay);
+  console.log(wordPlay);
+  if (!playReady || !catFound || !dogFound) problems.push({ wordPlay, cat: !!cat, dog: !!dog });
+
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+  await go("/maze-generator/");
+  await value(`new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      if (document.getElementById("maze-status").textContent.includes("seed")) resolve(true);
+      else if (Date.now() - start > 5000) resolve(false);
+      else setTimeout(tick, 50);
+    };
+    tick();
+  })`);
+  await value(`(() => {
+    document.getElementById("maze-width").value = "5";
+    document.getElementById("maze-height").value = "5";
+    document.getElementById("maze-seed").value = "1";
+    document.getElementById("maze-seed").dispatchEvent(new Event("change", { bubbles: true }));
+    document.getElementById("maze-view").scrollIntoView({ block: "center" });
+    return true;
+  })()`);
+  const mazeBox = await value(`(() => {
+    const canvas = document.getElementById("maze-view");
+    const box = canvas.getBoundingClientRect();
+    return { left: box.left, top: box.top, width: box.width, height: box.height, bw: canvas.width, bh: canvas.height };
+  })()`);
+  const solution = generateMaze(5, 5, 1).solution;
+  const pad = 10;
+  const cell = 18;
+  const mazePoints = solution.map(([x, y]) => ({
+    x: mazeBox.left + (pad + (x + 0.5) * cell) * (mazeBox.width / mazeBox.bw),
+    y: mazeBox.top + (pad + (y + 0.5) * cell) * (mazeBox.height / mazeBox.bh),
+  }));
+  await mouseDrag(mazePoints);
+  const mazeExit = await value(`document.getElementById("maze-status").textContent.includes("You reached the exit.")`);
+  await send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  await value(`document.getElementById("maze-view").scrollIntoView({ block: "center" })`);
+  const mazePhone = await value(`(() => {
+    const canvas = document.getElementById("maze-view");
+    const box = canvas.getBoundingClientRect();
+    return { left: box.left, top: box.top, width: box.width, height: box.height, bw: canvas.width, bh: canvas.height };
+  })()`);
+  const phonePoints = solution.map(([x, y]) => ({
+    x: mazePhone.left + (pad + (x + 0.5) * cell) * (mazePhone.width / mazePhone.bw),
+    y: mazePhone.top + (pad + (y + 0.5) * cell) * (mazePhone.height / mazePhone.bh),
+  }));
+  await value(`(() => {
+    document.getElementById("maze-width").value = "5";
+    document.getElementById("maze-height").value = "5";
+    document.getElementById("maze-seed").value = "1";
+    document.getElementById("maze-seed").dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  })()`);
+  const mazePhone2 = await value(`(() => {
+    const canvas = document.getElementById("maze-view");
+    canvas.scrollIntoView({ block: "center" });
+    const box = canvas.getBoundingClientRect();
+    return { left: box.left, top: box.top, width: box.width, height: box.height, bw: canvas.width, bh: canvas.height };
+  })()`);
+  const touchPoints = solution.map(([x, y]) => ({
+    x: mazePhone2.left + (pad + (x + 0.5) * cell) * (mazePhone2.width / mazePhone2.bw),
+    y: mazePhone2.top + (pad + (y + 0.5) * cell) * (mazePhone2.height / mazePhone2.bh),
+  }));
+  await touchDrag(touchPoints);
+  const mazeTouch = await value(`document.getElementById("maze-status").textContent.includes("You reached the exit.")`);
+  const mazePlay = `maze path mouse ${mazeExit} touch ${mazeTouch}`;
+  lines.push(mazePlay);
+  console.log(mazePlay);
+  if (!mazeExit || !mazeTouch) problems.push({ mazeExit, mazeTouch, points: mazePoints.length });
+
+  await go("/maze-generator/");
+  const seeds = await value(`new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      const status = document.getElementById("maze-status").textContent;
+      if (!status.includes("seed")) {
+        if (Date.now() - start > 5000) resolve(null);
+        else setTimeout(tick, 50);
+        return;
+      }
+      const before = document.getElementById("maze-seed").value;
+      document.getElementById("preset-easy").click();
+      const after = document.getElementById("maze-seed").value;
+      const seed = document.getElementById("maze-seed");
+      seed.value = "4242";
+      seed.dispatchEvent(new Event("input", { bubbles: true }));
+      document.getElementById("preset-hard").click();
+      resolve({ before, after, kept: seed.value, status: document.getElementById("maze-status").textContent });
+    };
+    tick();
+  })`);
+  const seedOk = seeds && seeds.after !== seeds.before && seeds.kept === "4242" && seeds.status.includes("40 by 40") && seeds.status.includes("4242");
+  const seedRow = `maze seeds ${seedOk}`;
+  lines.push(seedRow);
+  console.log(seedRow);
+  if (!seedOk) problems.push({ seeds });
+
+  await go("/word-search-generator/");
+  const wsSeed = await value(`new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      const words = document.getElementById("ws-words");
+      const seed = document.getElementById("ws-seed");
+      const status = document.getElementById("ws-status").textContent;
+      words.value = "CAT";
+      if (!(status.includes("seed") && seed.value !== "3")) {
+        seed.value = "3";
+        document.getElementById("btn-new").click();
+        if (Date.now() - start > 5000) resolve({ seed: seed.value, status });
+        else setTimeout(tick, 80);
+        return;
+      }
+      seed.value = "4";
+      seed.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      resolve({ seed: seed.value, status: document.getElementById("ws-status").textContent });
+    };
+    tick();
+  })`);
+  const wsSeedOk = wsSeed.seed === "4" && wsSeed.status.includes("seed 4");
+  const wsSeedRow = `word search seeds ${wsSeedOk}`;
+  lines.push(wsSeedRow);
+  console.log(wsSeedRow);
+  if (!wsSeedOk) problems.push({ wsSeed });
+
+  async function printTitle(url, setTitle, expected) {
+    await go(url);
+    await value(`new Promise((resolve) => {
+      const start = Date.now();
+      const tick = () => {
+        ${setTitle}
+        const title = document.getElementById("print-title");
+        if (title && title.textContent === ${JSON.stringify(expected)}) resolve(true);
+        else if (Date.now() - start > 5000) resolve(false);
+        else setTimeout(tick, 80);
+      };
+      tick();
+    })`);
+    await send("Emulation.setEmulatedMedia", { media: "print" }, sessionId);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const printed = await value(`(() => {
+      const title = document.getElementById("print-title");
+      const h1 = document.querySelector("h1");
+      return { text: title ? title.textContent : "", title: title ? getComputedStyle(title).display : "", h1: getComputedStyle(h1).display };
+    })()`);
+    await send("Emulation.setEmulatedMedia", { media: "screen" }, sessionId);
+    return printed;
+  }
+  const wsPrint = await printTitle(
+    "/word-search-generator/",
+    `const input = document.getElementById("ws-title"); input.value = "Science Week"; input.dispatchEvent(new Event("input", { bubbles: true }));`,
+    "Science Week",
+  );
+  const mazePrint = await printTitle(
+    "/maze-generator/",
+    `const input = document.getElementById("maze-title"); input.value = "Class 4"; input.dispatchEvent(new Event("input", { bubbles: true }));`,
+    "Class 4",
+  );
+  const printOk = wsPrint.text === "Science Week" && wsPrint.title !== "none" && wsPrint.h1 === "none" && mazePrint.text === "Class 4" && mazePrint.h1 === "none";
+  const printRow = `print titles ${printOk} word ${wsPrint.h1} maze ${mazePrint.h1}`;
+  lines.push(printRow);
+  console.log(printRow);
+  if (!printOk) problems.push({ wsPrint, mazePrint });
 } finally {
   ws.close();
   chrome.kill();

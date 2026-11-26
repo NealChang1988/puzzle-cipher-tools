@@ -306,6 +306,7 @@ function lettersBody(kind, index) {
     <div class="field">
       <label for="letters-input">Your letters</label>
       <textarea id="letters-input" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      ${button("btn-example", "Try example", "pencil")}
     </div>
     <div class="choices">
       <label><input type="radio" name="mode" id="mode-all" value="all"${anagram ? " checked" : ""}> Use all letters</label>
@@ -375,7 +376,10 @@ function sudokuBody() {
       </div>
       <div class="nums" aria-label="Numbers">${sudokuNumbers()}</div>
       <div class="paste" id="sudoku-paste">
-        <button type="button" class="btn paste-toggle" id="btn-paste" aria-expanded="false" aria-controls="paste-input">Paste a puzzle</button>
+        <div class="paste-head">
+          <button type="button" class="btn paste-toggle" id="btn-paste" aria-expanded="false" aria-controls="paste-input">Paste a puzzle</button>
+          ${button("btn-example", "Try example", "pencil")}
+        </div>
         <label for="paste-input">Paste a puzzle</label>
         <textarea id="paste-input" rows="3" spellcheck="false" autocomplete="off" placeholder="81 digits. Use 0 or a dot for an empty cell."></textarea>
         <p class="hint">0, a dot, or a blank cell counts as empty. Line breaks, spaces, and | are removed.</p>

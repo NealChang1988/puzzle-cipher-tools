@@ -57,7 +57,10 @@
       </div>
       <div class="nums" aria-label="Numbers"><button type="button" class="btn num" id="btn-n1"><span class="btn-label">1</span></button><button type="button" class="btn num" id="btn-n2"><span class="btn-label">2</span></button><button type="button" class="btn num" id="btn-n3"><span class="btn-label">3</span></button><button type="button" class="btn num" id="btn-n4"><span class="btn-label">4</span></button><button type="button" class="btn num" id="btn-n5"><span class="btn-label">5</span></button><button type="button" class="btn num" id="btn-n6"><span class="btn-label">6</span></button><button type="button" class="btn num" id="btn-n7"><span class="btn-label">7</span></button><button type="button" class="btn num" id="btn-n8"><span class="btn-label">8</span></button><button type="button" class="btn num" id="btn-n9"><span class="btn-label">9</span></button><button type="button" class="btn" id="btn-erase"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12"></path><path d="M9 7V5h6v2"></path><path d="M8 7l1 13h6l1-13"></path></svg><span class="btn-label">Erase</span></button></div>
       <div class="paste" id="sudoku-paste">
-        <button type="button" class="btn paste-toggle" id="btn-paste" aria-expanded="false" aria-controls="paste-input">Paste a puzzle</button>
+        <div class="paste-head">
+          <button type="button" class="btn paste-toggle" id="btn-paste" aria-expanded="false" aria-controls="paste-input">Paste a puzzle</button>
+          <button type="button" class="btn" id="btn-example"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.2-.8L19 8.4 15.6 5 5 15.6 4 20z"></path><path d="M13.5 7.1l3.4 3.4"></path></svg><span class="btn-label">Try example</span></button>
+        </div>
         <label for="paste-input">Paste a puzzle</label>
         <textarea id="paste-input" rows="3" spellcheck="false" autocomplete="off" placeholder="81 digits. Use 0 or a dot for an empty cell."></textarea>
         <p class="hint">0, a dot, or a blank cell counts as empty. Line breaks, spaces, and | are removed.</p>

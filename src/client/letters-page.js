@@ -141,6 +141,10 @@ export function mount(doc) {
     });
   }
 
+  doc.getElementById("btn-example")?.addEventListener("click", () => {
+    input.value = defaultMode === "any" ? "P, L, O, E" : "LISTEN";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
   input.addEventListener("input", () => run());
   doc.getElementById("mode-all").addEventListener("change", () => run());
   doc.getElementById("mode-any").addEventListener("change", () => run());
